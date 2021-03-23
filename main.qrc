@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/eyedropper">
+        <file>src/eyedropper.png</file>
+    </qresource>
+</RCC>
