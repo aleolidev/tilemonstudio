@@ -17,47 +17,58 @@ from PyQt5.QtWidgets import *
 
 class TilemonStudioWindow(QMainWindow):
     def __init__(self):
+        self.load_init_window_toolbar()
+        #self.load_tileset_window()
+
+    def load_init_window_toolbar(self):
         QMainWindow.__init__(self)
-        self.setWindowTitle("Tilemon Studio")
-        self.setFixedSize(348, 384)
+        
+        self.set_window_basic_info("Tilemon Studio", (248, 200), True)
 
-        self.openImageAct = QAction('&Load Image', self)
-        self.openImageAct.setShortcut('Ctrl+O')
-        self.openImageAct.setStatusTip('Load RAW Tileset Image')
+        # Creates a Sprite From a RAW Image
+        self.createSpriteAct = QAction('&Create Sprite', self)
+        self.createSpriteAct.setShortcut('Ctrl+I')
+        self.createSpriteAct.triggered.connect(lambda *args: self.create_sprite_triggered())
 
-        self.importTilesetAct = QAction('&Import Tileset', self)
-        self.importTilesetAct.setShortcut('Ctrl+T')
-        self.importTilesetAct.setStatusTip('Import Already Mounted Tileset Image')
+        # Load a Sprite
+        self.loadSpriteAct = QAction('&Load Sprite', self)
+        self.loadSpriteAct.setShortcut('Ctrl+Shift+I')
 
-        self.exportTilesetAct = QAction('&Export Tileset', self)
-        self.exportTilesetAct.setShortcut('Ctrl+S')
-        self.exportTilesetAct.setStatusTip('Export Processed Tileset')
+        # Creates a Tileset From RAW Image
+        self.createTilesetAct = QAction('&Create Tileset', self)
+        self.createTilesetAct.setShortcut('Ctrl+T')
 
-        self.exportSelPaletteAct = QAction('&Export Selected Palette', self)
-        self.exportSelPaletteAct.setShortcut('Ctrl+P')
-        self.exportSelPaletteAct.setStatusTip('Export Selected Palette')
+        # Load a Tileset
+        self.loadTilesetAct = QAction('&Load Tileset', self)
+        self.loadTilesetAct.setShortcut('Ctrl+Shift+T')
 
-        self.exportAllPalettesAct = QAction('&Export All Palettes', self)
-        self.exportAllPalettesAct.setShortcut('Ctrl+Shift+P')
-        self.exportAllPalettesAct.setStatusTip('Export All Palettes')
+        # Creates a Background From RAW Image
+        self.createBackgroundAct = QAction('&Create Background', self)
+        self.createBackgroundAct.setShortcut('Ctrl+B')
 
+        # Load a Background
+        self.loadBackgroundAct = QAction('&Load Background', self)
+        self.loadBackgroundAct.setShortcut('Ctrl+Shift+B')
+
+        # Exit application
         self.exitAct = QAction('&Exit', self)
         self.exitAct.setShortcut('Ctrl+Q')
-        self.exitAct.setStatusTip('Exit application')
         self.exitAct.triggered.connect(qApp.quit)
 
         self.menubar = self.menuBar()
         self.fileMenu = self.menubar.addMenu('&File')
-        self.fileMenu.addAction(self.openImageAct)
-        self.fileMenu.addAction(self.importTilesetAct)
+        self.fileMenu.addAction(self.createSpriteAct)
+        self.fileMenu.addAction(self.loadSpriteAct)
         self.fileMenu.addSeparator()
-        self.fileMenu.addAction(self.exportTilesetAct)
-        self.fileMenu.addAction(self.exportSelPaletteAct)
-        self.fileMenu.addAction(self.exportAllPalettesAct)
+        self.fileMenu.addAction(self.createTilesetAct)
+        self.fileMenu.addAction(self.loadTilesetAct)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.createBackgroundAct)
+        self.fileMenu.addAction(self.loadBackgroundAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
 
-        self.solidColorOption = QAction('&Solid Color', self)
+        """self.solidColorOption = QAction('&Solid Color', self)
         self.solidColorOption.setCheckable(True)
         self.solidColorOption.setChecked(True)
         self.solidColorOption.setStatusTip('Set the background color to a solid color')
@@ -97,18 +108,18 @@ class TilemonStudioWindow(QMainWindow):
         self.removeRepFlipTilesOption.setChecked(True)
         self.removeRepFlipTilesOption.setStatusTip('Optimize tileset removing repetead flipped tiles')
 
-        self.optionsMenu = self.menubar.addMenu('&Options')
-        self.optionsMenu.addAction(self.solidColorOption)
-        self.optionsMenu.addAction(self.transpColorOption)
-        self.optionsMenu.addSeparator()
-        self.optionsMenu.addAction(self.keepAbundantOption)
-        self.optionsMenu.addAction(self.avgColorOption)
-        self.optionsMenu.addAction(self.kMeansOption)
-        self.optionsMenu.addSeparator()
-        self.optionsMenu.addAction(self.refactorTilesetOption)
-        self.optionsMenu.addSeparator()
-        self.optionsMenu.addAction(self.removeRepTilesOption)
-        self.optionsMenu.addAction(self.removeRepFlipTilesOption)
+        self.options = self.menubar.addMenu('&Options')
+        self.options.addAction(self.solidColorOption)
+        self.options.addAction(self.transpColorOption)
+        self.options.addSeparator()
+        self.options.addAction(self.keepAbundantOption)
+        self.options.addAction(self.avgColorOption)
+        self.options.addAction(self.kMeansOption)
+        self.options.addSeparator()
+        self.options.addAction(self.refactorTilesetOption)
+        self.options.addSeparator()
+        self.options.addAction(self.removeRepTilesOption)
+        self.options.addAction(self.removeRepFlipTilesOption)"""
 
         self.infoAct = QAction('&Info', self)
         self.infoAct.setStatusTip('See information')
@@ -116,6 +127,88 @@ class TilemonStudioWindow(QMainWindow):
         self.helpMenu = self.menubar.addMenu('&Help')
         self.helpMenu.addAction(self.infoAct)
 
+
+    def set_window_basic_info(self, title, size:tuple, isFixed):
+        self.setWindowTitle(title)
+        width, height = size
+        if isFixed:
+            self.setFixedSize(width, height)
+        else:
+            # Everything is needed to ensure the QMainWindow is resizable and maximizable
+            self.setWindowFlags(self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowMaximizeButtonHint)
+            self.setMaximumSize(QWIDGETSIZE_MAX,QWIDGETSIZE_MAX)
+            self.setMinimumSize(0,0)
+            self.resize(width, height)
+            self.show()
+
+    def load_sprite_window(self):
+        ### Set basic information
+        self.set_window_basic_info("Tilemon Studio - Sprites", (448, 400), False)
+
+        ### Set Toolbar 
+        self.menubar.clear()
+        self.menubar = self.menuBar()
+        
+        # Save the Sprite
+        self.saveSpriteAct = QAction('&Save Sprite', self)
+        self.saveSpriteAct.setShortcut('Ctrl+S')
+        # self.saveSpriteAct.triggered.connect(lambda *args: self.create_sprite_triggered())
+
+        # Set Sprite To 4BPP
+        self.setTo4BPPAct = QAction('&Set to 4BPP', self)
+        self.setTo4BPPAct.setCheckable(True)
+        # Set Sprite To 8BPP
+        self.setTo8BPPAct = QAction('&Set to 8BPP', self)
+        self.setTo8BPPAct.setCheckable(True)
+        # Gives The Option of Slice the Sprite
+        self.sliceSpriteAct = QAction('&Slice Sprite', self)
+        self.sliceSpriteAct.setCheckable(True)
+        self.sliceSpriteAct.setChecked(False)
+
+        self.fileMenu = self.menubar.addMenu('&File')
+        self.fileMenu.addAction(self.createSpriteAct)
+        self.fileMenu.addAction(self.loadSpriteAct)
+        self.fileMenu.addAction(self.saveSpriteAct)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.exitAct)
+
+        self.options = self.menubar.addMenu('&Options')
+        self.options.addAction(self.setTo4BPPAct)
+        self.options.addAction(self.setTo8BPPAct)
+        self.options.addSeparator()
+        self.options.addAction(self.sliceSpriteAct)
+
+        self.helpMenu = self.menubar.addMenu('&Help')
+        self.helpMenu.addAction(self.infoAct)
+
+        ### Set Graphical User Interface
+        self.mainLayout = QHBoxLayout()
+        self.leftLayout = QVBoxLayout()
+        self.rightLayout = QVBoxLayout()
+
+        # Set left side panels
+        self.sprite_pal_manager = PaletteManagerWidget(self)
+        
+        self.leftLayout.addWidget(self.sprite_pal_manager)
+        self.leftLayout.addStretch()
+
+        # Set right side panels (Show sprite)
+        self.rightLayout.setContentsMargins(0,0,0,0)
+        self.scrollAreaImage = QScrollArea(alignment=Qt.AlignCenter)
+        self.scrollAreaImage.imageLabel = QLabel()
+        self.scrollAreaImage.setStyleSheet("background-color:#b0b0b0;")
+        self.scrollAreaImage.setWidget(self.scrollAreaImage.imageLabel)
+        self.rightLayout.addWidget(self.scrollAreaImage)
+
+        self.mainLayout.addLayout(self.leftLayout)
+        self.mainLayout.addLayout(self.rightLayout)
+        self.mainWidget = QWidget()
+        self.mainWidget.setLayout(self.mainLayout)
+        self.setCentralWidget(self.mainWidget)
+
+
+
+    def load_tileset_window(self):
         self.mainLayout = QHBoxLayout()
         self.leftLayout = QVBoxLayout()
         self.rightLayout = QVBoxLayout()
@@ -198,7 +291,7 @@ class TilemonStudioWindow(QMainWindow):
         self.rightLayout.addWidget(self.tabWidget)
 
 
-        self.openImageAct.triggered.connect(lambda *args: self.select_file())
+        self.createTilesetAct.triggered.connect(lambda *args: self.select_file())
         self.solidColorOption.triggered.connect(lambda *args: self.set_solid_color())
         self.transpColorOption.triggered.connect(lambda *args: self.set_transparent_background())
         self.avgColorOption.triggered.connect(lambda *args: self.set_average_color_trigger())
@@ -220,6 +313,20 @@ class TilemonStudioWindow(QMainWindow):
         self.setCentralWidget(self.mainWidget)
 
         self.set_enabled_state_about_open(False)
+
+    
+    def create_sprite_triggered(self):
+        pixmap = self.select_file("Select Sprite Image")
+        
+        pilimg = pixmap2pil(pixmap)
+        self.sprite_pal = Palette(np.array([elem[1] for elem in (pilimg.getcolors(maxcolors=65536))]))
+        
+        self.load_sprite_window()
+
+        self.scrollAreaImage.imageLabel.setPixmap(pixmap)
+        self.scrollAreaImage.imageLabel.resize(pixmap.size())
+
+        self.sprite_pal_manager.palettesLabel.setPixmap(pil2pixmap(self.sprite_pal.get_paletteviewer_image()))
 
     def set_solid_color(self):
         if self.sender().isChecked() == False:
@@ -307,7 +414,7 @@ class TilemonStudioWindow(QMainWindow):
 
         imgPalettes = np.array(list(self.processedImage.generate_palettes()))
         #imgPalettes = np.array([elem[1] for elem in (procImg.getcolors())])
-        imgPalettes = self.processedImage.create_image_from_palette(imgPalettes)
+        imgPalettes = create_image_from_palette(imgPalettes)
         imgPalettes = pil2pixmap(imgPalettes)
         self.scrollAreaPal.label.setPixmap(imgPalettes)
         self.scrollAreaPal.label.resize(imgPalettes.size())
@@ -353,51 +460,49 @@ class TilemonStudioWindow(QMainWindow):
             self.colorPicker.addWidget(self.pickColor)
             self.colorPicker.addItem(self.colorStretch)
 
-    def select_file(self):
-        #try:
-        name, _ = QFileDialog.getOpenFileName(QFileDialog(),"Select RAW Tileset","/","Image Files (*.png)")
+    def select_file(self, dialogName):
+        try:
+            name, _ = QFileDialog.getOpenFileName(QFileDialog(), dialogName,"/","Image Files (*.png)")
 
-        if name != "":
-            start = time.time()
-            pixmap = QPixmap(name)
-            self.scrollAreaDef.label.setPixmap(pixmap)
-            self.scrollAreaDef.label.resize(pixmap.size())
+            if name != "":
+                pixmap = QPixmap(name)
+                return pixmap
+                """self.scrollAreaDef.label.setPixmap(pixmap)
+                self.scrollAreaDef.label.resize(pixmap.size())
 
-            self.processedImage = Tileset(False, pixmap)
+                self.processedImage = Tileset(False, pixmap)
 
-            self.processedImage.toProcessTileset = self.processedImage.reduce_duplicate_tiles(self.processedImage.toProcessTileset, self.refactorTilesetOption.isChecked(), self.removeRepFlipTilesOption.isChecked())
-            processedPix = pil2pixmap(self.processedImage.toProcessTileset)
-            self.scrollAreaProc.label.setPixmap(processedPix)
-            self.scrollAreaProc.label.resize(processedPix.size())
-            self.set_enabled_state_about_open(True)
+                self.processedImage.toProcessTileset = self.processedImage.reduce_duplicate_tiles(self.processedImage.toProcessTileset, self.refactorTilesetOption.isChecked(), self.removeRepFlipTilesOption.isChecked())
+                processedPix = pil2pixmap(self.processedImage.toProcessTileset)
+                self.scrollAreaProc.label.setPixmap(processedPix)
+                self.scrollAreaProc.label.resize(processedPix.size())
+                self.set_enabled_state_about_open(True)
 
-            hexColor = '#%02x%02x%02x' % self.processedImage.bgColor
-            if self.processedImage.get_color_value(self.processedImage.bgColor) < 500:
-                self.showColorLabel.setStyleSheet("background-color: " + hexColor + "; color: #fff;")
-            else:
-                self.showColorLabel.setStyleSheet("background-color: " + hexColor + "; color: #222;")
+                hexColor = '#%02x%02x%02x' % self.processedImage.bgColor
+                if self.processedImage.get_color_value(self.processedImage.bgColor) < 500:
+                    self.showColorLabel.setStyleSheet("background-color: " + hexColor + "; color: #fff;")
+                else:
+                    self.showColorLabel.setStyleSheet("background-color: " + hexColor + "; color: #222;")
 
-            self.showColorLabel.setText(hexColor)
+                self.showColorLabel.setText(hexColor)
 
-            colorsAmount = self.processedImage.get_colors_amount(self.processedImage.toProcessTileset)
-            self.subSetColorsSpin.setRange(1, colorsAmount)
-            self.subSetColorsSpin.setValue(colorsAmount)
+                colorsAmount = self.processedImage.get_colors_amount(self.processedImage.toProcessTileset)
+                self.subSetColorsSpin.setRange(1, colorsAmount)
+                self.subSetColorsSpin.setValue(colorsAmount)
 
-            #imgPalettes = (self.processedImage.toProcessTileset.getcolors())[1::2,:]
-            #imgPalettes = np.array([elem[1] for elem in (self.processedImage.toProcessTileset.getcolors())])
-            imgPalettes = np.array(list(self.processedImage.generate_palettes()))
-            imgPalettes = self.processedImage.create_image_from_palette(imgPalettes)
-            imgPalettes = pil2pixmap(imgPalettes)
-            #self.processedImage.generate_tile(self.processedImage.toProcessTileset, 1, 0)
-            #imgPalettes = pil2pixmap(self.processedImage.get_tile(self.processedImage.toProcessTileset, 1, 0))
-            self.scrollAreaPal.label.setPixmap(imgPalettes)
-            self.scrollAreaPal.label.resize(imgPalettes.size())
+                #imgPalettes = (self.processedImage.toProcessTileset.getcolors())[1::2,:]
+                #imgPalettes = np.array([elem[1] for elem in (self.processedImage.toProcessTileset.getcolors())])
+                imgPalettes = np.array(list(self.processedImage.generate_palettes()))
+                imgPalettes = create_image_from_palette(imgPalettes)
+                imgPalettes = pil2pixmap(imgPalettes)
+                #self.processedImage.generate_tile(self.processedImage.toProcessTileset, 1, 0)
+                #imgPalettes = pil2pixmap(self.processedImage.get_tile(self.processedImage.toProcessTileset, 1, 0))
+                self.scrollAreaPal.label.setPixmap(imgPalettes)
+                self.scrollAreaPal.label.resize(imgPalettes.size())
 
-            self.processedImage.generate_palettes()
-            end = time.time()
-            print("Load took: ", end-start)
-        """except:
-            print("Error opening the image file")"""
+                self.processedImage.generate_palettes()"""
+        except:
+            print("Error opening the image file")
 
 class Tileset():
     def __init__(self, isTransparent, rawPixmap):
@@ -652,14 +757,6 @@ class Tileset():
         else:
             return tuple(image[0][0])
 
-    def create_image_from_palette(self, palette):
-        image = Image.new("RGBA", (128, (((palette.shape[0] - 1) // 16) + 1)*8), (0, 0, 0, 0))
-        for i in range(palette.shape[0]):
-            aux = Image.new("RGB", (8, 8), tuple(palette[i]))
-            pos = ((i % 16)*8, (i // 16)*8)
-            image.paste(aux, pos)
-        return image
-
     def get_color_value(self, color):
         return int(int(color[0]) + int(color[1]) + int(color[2]))
 
@@ -750,6 +847,218 @@ class Tile():
 
     def __str__(self):
         return "tileId: " + str(self.tileId) + "\ncolAmount: " + str(self.colAmount) + "\npal: " + str(self.pal)
+
+class Palette():
+
+    def __init__(self, palette):
+        self.palette = palette
+        self.COLORPICKER_FRAME_THICKNESS = 2
+        self.raw_palette_img = create_image_from_palette(palette)
+        self.void_palette_img = self.generate_void_palette_image()
+        self.colorpick_frame = self.generate_colorpick_frame()
+        self.color_picked = 0
+
+    def get_paletteviewer_image(self):
+        paletteviewer = self.void_palette_img.copy()
+        paletteviewer.paste(self.raw_palette_img, (self.COLORPICKER_FRAME_THICKNESS, self.COLORPICKER_FRAME_THICKNESS), self.raw_palette_img)
+        
+        clrpicker_pos = ((self.color_picked % 16) * 8, (self.color_picked // 16) * 8)
+        paletteviewer.paste(self.colorpick_frame, clrpicker_pos, self.colorpick_frame)
+        
+        return paletteviewer
+
+        
+    def generate_void_palette_image(self):
+        baseTile = Image.new("RGB", (8, 8), (196, 196, 196))
+        smallerBaseTile = Image.new("RGB", (4, 4), (224, 224, 224))
+        baseTile.paste(smallerBaseTile, (0, 4))
+        baseTile.paste(smallerBaseTile, (4, 0))
+    
+        void_temp_palette_image = Image.new("RGB", (128, 128), (255, 0, 0))
+        void_palette_image = Image.new("RGBA", (128 + (self.COLORPICKER_FRAME_THICKNESS*2), 128 + (self.COLORPICKER_FRAME_THICKNESS*2)), (0, 0, 0, 0))
+
+
+        void_temp_palette_image.paste(baseTile, (0, 0))
+
+        for i in range(4):
+            void_temp_palette_image.paste(void_temp_palette_image, ((2 ** i)*8, 0))
+
+        for i in range(4):
+            void_temp_palette_image.paste(void_temp_palette_image, (0, ((2 ** i)*8)))
+
+        void_palette_image.paste(void_temp_palette_image, (self.COLORPICKER_FRAME_THICKNESS, self.COLORPICKER_FRAME_THICKNESS))
+
+        return void_palette_image
+
+    def generate_colorpick_frame(self):
+        frame = Image.new("RGBA", (8+(2*self.COLORPICKER_FRAME_THICKNESS), 8+(2*self.COLORPICKER_FRAME_THICKNESS)), (0, 0, 0, 0))
+        vertical_red_stick = Image.new("RGB", (self.COLORPICKER_FRAME_THICKNESS, 8 + self.COLORPICKER_FRAME_THICKNESS), (255, 32, 32))
+        horizontal_red_stick = Image.new("RGB", (8 + self.COLORPICKER_FRAME_THICKNESS, self.COLORPICKER_FRAME_THICKNESS), (255, 32, 32))
+
+        frame.paste(vertical_red_stick, (0, 0))
+        frame.paste(horizontal_red_stick, (0, 8 + self.COLORPICKER_FRAME_THICKNESS))
+        frame.paste(vertical_red_stick, (8 + self.COLORPICKER_FRAME_THICKNESS, self.COLORPICKER_FRAME_THICKNESS))
+        frame.paste(horizontal_red_stick, (self.COLORPICKER_FRAME_THICKNESS, 0))
+
+        return frame
+
+class PaletteManagerWidget(QWidget):
+    def __init__(self, parent):
+        super(PaletteManagerWidget, self).__init__(parent)
+        self.layout = QVBoxLayout(self)
+        self.setLayout(self.layout)
+        self.clicked_color = 0
+
+        self.palettesGroupbox = QGroupBox("Palettes")
+        self.palettesLayout = QVBoxLayout()
+        self.palettesGroupbox.setLayout(self.palettesLayout)
+        self.palettesGroupbox.setFixedSize(154, 169)
+        self.layout.addWidget(self.palettesGroupbox)
+        
+        self.palettesLabel = QLabel()
+        self.palettesLabel.setCursor(QCursor(Qt.PointingHandCursor))
+        self.palettesLabel.mousePressEvent = self.set_clicked_color
+
+        self.palettesLayout.addWidget(self.palettesLabel)
+        self.palettesLayout.addStretch()
+
+        self.editColorGroupbox = QGroupBox("Edit Color")
+        self.editColorLayout = QVBoxLayout()
+        self.selectedColorLayout = QHBoxLayout()
+        self.sliderColorLayout = QVBoxLayout()
+        self.editColorGroupbox.setFixedSize(154, 159)
+        # self.editColorGroupbox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.layout.addWidget(self.editColorGroupbox)
+        self.editColorGroupbox.setLayout(self.editColorLayout)
+        self.editColorLayout.addLayout(self.selectedColorLayout)
+        self.selectedColorLayout.setContentsMargins(QMargins(0, 3, 0, 3))
+        self.editColorLayout.addLayout(self.sliderColorLayout)
+        self.editColorLayout.addStretch()
+
+        self.selectedColorLabel = QLabel()
+        self.selectedColorLabel.setFixedSize(32, 32)
+        
+        first_color = self.parent().sprite_pal.palette[0]
+        bg_color = ("background-color:rgb(" + str(first_color[0]) + ", " + str(first_color[1]) + ", " + str(first_color[2]) + ");")
+        bg_color = bg_color.replace(" ", "")
+        self.selectedColorLabel.setStyleSheet(bg_color)
+
+        self.selectedColorLayout.addWidget(self.selectedColorLabel)
+
+        self.redColorLayout = QHBoxLayout()
+        self.redColorLayout.setContentsMargins(QMargins(0, 3, 0, 3))
+        self.greenColorLayout = QHBoxLayout()
+        self.greenColorLayout.setContentsMargins(QMargins(0, 3, 0, 3))
+        self.blueColorLayout = QHBoxLayout()
+        self.blueColorLayout.setContentsMargins(QMargins(0, 3, 0, 3))
+
+        # Red Slider
+        self.redSlider = QSlider(Qt.Horizontal, self)
+        self.redSlider.setRange(0, 255)
+        self.redSlider.setFixedSize(96, 16)
+        self.redSlider.setStyleSheet(self.generate_custom_slider(first_color, 0))
+        self.redSlider.setValue(first_color[0])
+
+        self.redSpinBox = QSpinBox()
+        self.redSpinBox.setRange(0, 255)
+        self.redSpinBox.setFixedSize(40, 16)
+        self.redSpinBox.setValue(first_color[0])
+
+        self.redColorLayout.addWidget(self.redSlider)
+        self.redColorLayout.addWidget(self.redSpinBox)
+
+        self.sliderColorLayout.addLayout(self.redColorLayout)
+
+        # Green Slider
+        self.greenSlider = QSlider(Qt.Horizontal)
+        self.greenSlider.setRange(0, 255)
+        self.greenSlider.setFixedSize(96, 16)
+        self.greenSlider.setStyleSheet(self.generate_custom_slider(first_color, 1))
+        self.greenSlider.setValue(first_color[1])
+
+        self.greenSpinBox = QSpinBox()
+        self.greenSpinBox.setRange(0, 255)
+        self.greenSpinBox.setFixedSize(40, 16)
+        self.greenSpinBox.setValue(first_color[1])
+
+        self.greenColorLayout.addWidget(self.greenSlider)
+        self.greenColorLayout.addWidget(self.greenSpinBox)
+
+        self.sliderColorLayout.addLayout(self.greenColorLayout)
+
+        # Blue Slider
+        self.blueSlider = QSlider(Qt.Horizontal, self)
+        self.blueSlider.setRange(0, 255)
+        self.blueSlider.setFixedSize(96, 16)
+        self.blueSlider.setStyleSheet(self.generate_custom_slider(first_color, 2))
+        self.blueSlider.setValue(first_color[2])
+
+        self.blueSpinBox = QSpinBox()
+        self.blueSpinBox.setRange(0, 255)
+        self.blueSpinBox.setFixedSize(40, 16)
+        self.blueSpinBox.setValue(first_color[2])
+
+        self.blueColorLayout.addWidget(self.blueSlider)
+        self.blueColorLayout.addWidget(self.blueSpinBox)
+        
+        self.sliderColorLayout.addLayout(self.blueColorLayout)
+
+        
+    def set_clicked_color(self, event):
+        main_window = self.parent().parent()
+        frame_thickness = main_window.sprite_pal.COLORPICKER_FRAME_THICKNESS
+        x, y = event.pos().x() - frame_thickness, event.pos().y() - frame_thickness
+
+        if x >= 0 and y >= 0:
+            print(x," // 8 = ", x // 8 ,"; (", y, " // 8) * 16 = ", (y // 8) * 16)
+            clicked_color = x // 8 + ((y // 8) * 16)
+            if clicked_color < main_window.sprite_pal.palette.shape[0] and clicked_color < 256:
+                main_window.sprite_pal.color_picked = clicked_color
+                main_window.sprite_pal_manager.palettesLabel.setPixmap(pil2pixmap(main_window.sprite_pal.get_paletteviewer_image()))
+
+    def generate_custom_slider(self, color, rgb_index):
+
+        custom_slider_css = """
+                    .QSlider::groove:horizontal {
+                        border: 0px solid #262626;
+                        height: 12px;""" + self.generate_gradient(color, rgb_index) + """margin: 0 6px;
+                    }
+
+                    .QSlider::handle:horizontal {
+                        width: 0;
+                        height: 0;
+                        border-style: solid;
+                        border-width: 4;
+                        border-color: #007bff;
+                        margin: -2px -4px;
+
+                    }"""
+
+        return custom_slider_css
+
+    def generate_gradient(self, color, rgb_index):
+        if rgb_index == 1:
+            low_color = (color[0], 0, color[2])
+            high_color = (color[0], 255, color[2])
+        elif rgb_index == 2:
+            low_color = (color[0], color[1], 0)
+            high_color = (color[0], color[1], 255)
+        else:
+            low_color = (0, color[1], color[2])
+            high_color = (255, color[1], color[2])
+            
+        linear_gradient = "background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 rgb" + str(low_color).replace(" ", "") + ", stop: 1 rgb" + str(high_color).replace(" ", "") + ");"
+        return linear_gradient
+
+def create_image_from_palette(palette):
+    image = Image.new("RGBA", (128, (((palette.shape[0] - 1) // 16) + 1)*8), (0, 0, 0, 0))
+    for i in range(palette.shape[0]):
+        aux = Image.new("RGB", (8, 8), tuple(palette[i]))
+        pos = ((i % 16)*8, (i // 16)*8)
+        image.paste(aux, pos)
+        if i >= 255:
+            break
+    return image
 
 def color_sort_criteria(color):
     hsvColor = colorsys.rgb_to_hsv(*np.array(color)/255.)
