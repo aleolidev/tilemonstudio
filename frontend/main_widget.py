@@ -58,6 +58,7 @@ class MainWidget(QMainWindow):
         self.create_sprite_action.setShortcut("Ctrl+I")
         self.load_sprite_action.setShortcut("Ctrl+Shift+I")
         self.save_work_action.setShortcut("Ctrl+S")
+        self.exit_action.setShortcut("Ctrl+Q")
         
         # OTHER STUFF!
         self.set_to_4bpp_action.setCheckable(True)
@@ -74,6 +75,7 @@ class MainWidget(QMainWindow):
         self.setCentralWidget(self.central_widget)
     
     def connect_signals(self):
+        self.create_sprite_action.triggered.connect(self.central_widget.add_tab)
         pass
         # action1.triggered.connect(self.central_widget.add_tab)
         # action2.triggered.connect(self.del_tab)

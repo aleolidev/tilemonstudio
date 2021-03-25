@@ -128,6 +128,7 @@ class TilemonStudioWindow(QMainWindow):
         self.helpMenu.addAction(self.infoAct)
 
 
+    # deprecated
     def set_window_basic_info(self, title, size:tuple, isFixed):
         self.setWindowTitle(title)
         width, height = size
@@ -142,44 +143,48 @@ class TilemonStudioWindow(QMainWindow):
             self.show()
 
     def load_sprite_window(self):
+        """
+
+        """
         ### Set basic information
-        self.set_window_basic_info("Tilemon Studio - Sprites", (448, 400), False)
+        self.set_window_basic_info("Tilemon Studio - Sprites", (448, 400), False)  # deprecated
 
-        ### Set Toolbar 
-        self.menubar.clear()
-        self.menubar = self.menuBar()
-        
-        # Save the Sprite
-        self.saveSpriteAct = QAction('&Save Sprite', self)
-        self.saveSpriteAct.setShortcut('Ctrl+S')
-        # self.saveSpriteAct.triggered.connect(lambda *args: self.create_sprite_triggered())
+        if True:
+            ### Set Toolbar 
+            self.menubar.clear()
+            self.menubar = self.menuBar()
+            
+            # Save the Sprite
+            self.saveSpriteAct = QAction('&Save Sprite', self)
+            self.saveSpriteAct.setShortcut('Ctrl+S')
+            # self.saveSpriteAct.triggered.connect(lambda *args: self.create_sprite_triggered())
 
-        # Set Sprite To 4BPP
-        self.setTo4BPPAct = QAction('&Set to 4BPP', self)
-        self.setTo4BPPAct.setCheckable(True)
-        # Set Sprite To 8BPP
-        self.setTo8BPPAct = QAction('&Set to 8BPP', self)
-        self.setTo8BPPAct.setCheckable(True)
-        # Gives The Option of Slice the Sprite
-        self.sliceSpriteAct = QAction('&Slice Sprite', self)
-        self.sliceSpriteAct.setCheckable(True)
-        self.sliceSpriteAct.setChecked(False)
+            # Set Sprite To 4BPP
+            self.setTo4BPPAct = QAction('&Set to 4BPP', self)
+            self.setTo4BPPAct.setCheckable(True)
+            # Set Sprite To 8BPP
+            self.setTo8BPPAct = QAction('&Set to 8BPP', self)
+            self.setTo8BPPAct.setCheckable(True)
+            # Gives The Option of Slice the Sprite
+            self.sliceSpriteAct = QAction('&Slice Sprite', self)
+            self.sliceSpriteAct.setCheckable(True)
+            self.sliceSpriteAct.setChecked(False)
 
-        self.fileMenu = self.menubar.addMenu('&File')
-        self.fileMenu.addAction(self.createSpriteAct)
-        self.fileMenu.addAction(self.loadSpriteAct)
-        self.fileMenu.addAction(self.saveSpriteAct)
-        self.fileMenu.addSeparator()
-        self.fileMenu.addAction(self.exitAct)
+            self.fileMenu = self.menubar.addMenu('&File')
+            self.fileMenu.addAction(self.createSpriteAct)
+            self.fileMenu.addAction(self.loadSpriteAct)
+            self.fileMenu.addAction(self.saveSpriteAct)
+            self.fileMenu.addSeparator()
+            self.fileMenu.addAction(self.exitAct)
 
-        self.options = self.menubar.addMenu('&Options')
-        self.options.addAction(self.setTo4BPPAct)
-        self.options.addAction(self.setTo8BPPAct)
-        self.options.addSeparator()
-        self.options.addAction(self.sliceSpriteAct)
+            self.options = self.menubar.addMenu('&Options')
+            self.options.addAction(self.setTo4BPPAct)
+            self.options.addAction(self.setTo8BPPAct)
+            self.options.addSeparator()
+            self.options.addAction(self.sliceSpriteAct)
 
-        self.helpMenu = self.menubar.addMenu('&Help')
-        self.helpMenu.addAction(self.infoAct)
+            self.helpMenu = self.menubar.addMenu('&Help')
+            self.helpMenu.addAction(self.infoAct)
 
         ### Set Graphical User Interface
         self.mainLayout = QHBoxLayout()
@@ -187,7 +192,7 @@ class TilemonStudioWindow(QMainWindow):
         self.rightLayout = QVBoxLayout()
 
         # Set left side panels
-        self.sprite_pal_manager = PaletteManagerWidget(self)
+        self.sprite_pal_manager = PaletteManagerWidget(self)  
         
         self.leftLayout.addWidget(self.sprite_pal_manager)
         self.leftLayout.addStretch()
@@ -903,25 +908,36 @@ class Palette():
         return frame
 
 class PaletteManagerWidget(QWidget):
+    """
+        Widget que contiene:
+        - visor paletas
+        - editor de color
+        Es común a los tres editores
+        Posible futuro: meter reducción de colores
+    """
     def __init__(self, parent):
         super(PaletteManagerWidget, self).__init__(parent)
         self.layout = QVBoxLayout(self)
         self.setLayout(self.layout)
         self.clicked_color = 0
 
+        # visor de paletas
         self.palettesGroupbox = QGroupBox("Palettes")
         self.palettesLayout = QVBoxLayout()
         self.palettesGroupbox.setLayout(self.palettesLayout)
         self.palettesGroupbox.setFixedSize(154, 169)
         self.layout.addWidget(self.palettesGroupbox)
         
-        self.palettesLabel = QLabel()
-        self.palettesLabel.setCursor(QCursor(Qt.PointingHandCursor))
+        if True:
+            self.palettesLabel = QLabel()
+            self.palettesLabel.setCursor(QCursor(Qt.PointingHandCursor))
+        
         self.palettesLabel.mousePressEvent = self.set_clicked_color
 
         self.palettesLayout.addWidget(self.palettesLabel)
         self.palettesLayout.addStretch()
 
+        # editor de colores
         self.editColorGroupbox = QGroupBox("Edit Color")
         self.editColorLayout = QVBoxLayout()
         self.selectedColorLayout = QHBoxLayout()
@@ -941,7 +957,7 @@ class PaletteManagerWidget(QWidget):
         first_color = self.parent().sprite_pal.palette[0]
         bg_color = ("background-color:rgb(" + str(first_color[0]) + ", " + str(first_color[1]) + ", " + str(first_color[2]) + ");")
         bg_color = bg_color.replace(" ", "")
-        self.selectedColorLabel.setStyleSheet(bg_color)
+        self.selectedColorLabel.setStyleSheet(bg_color)  # -> color seleccionado (el que se está editando)
 
         self.selectedColorLayout.addWidget(self.selectedColorLabel)
 
