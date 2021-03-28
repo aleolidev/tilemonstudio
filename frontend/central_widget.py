@@ -37,7 +37,8 @@ class CentralWidget(QWidget):
         # TODO: check if work is saved, show pop-up
         self.tab_bar.removeTab(index)
 
-    def add_sprite_editor_tab(self):
+    def add_sprite_editor_tab(self, a, b):
+        print(a, b)
         sprte_editor_tab = SpriteEditorWidget()
         self.add_tab(f"tab {self.c}", sprte_editor_tab)
         self.c += 1
