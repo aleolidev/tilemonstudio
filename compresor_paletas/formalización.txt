@@ -18,3 +18,26 @@ Deseo llevarme TODOS los objetos en la menor cantidad de bolsas posibles.
 
 la solución trivial es, para un total de n objetos, llevar un objeto en cada bolsa.
 
+hay a lo más X bolsas.
+
+-----------------------
+posibles optimizaciones:
+  - eliminar subsets
+
+
+-----------------------
+
+
+c1: 1, 3, 4, 5, 7, 8, 10
+
+c2: 1, 3, 6, 5, 7, 8, 10
+
+H: n° de tiles abarcados
+
+
+
+
+
+
+
+

@@ -1,0 +1,37 @@
+en un inicio:
+- le paso tileset sin indexar ni nada, y me lo devuelve todo listo para indexar.
+
+
+
+- hacer lo mismo con sprites
+- 
+
+
+crear una especie de "photoshop" (sin opción de pintar)
+- múltiples pestañas, brinda herramientas según tipo de gráficos
+
+cosas genéricas:
+- mostrar paleta
+- editar color
+- botón reducir colores (e indexar)
+
+
+cosas exclusivas:
+sprites:
+- slice para dividirlo en frames (cortar una imagen en varias, ancho fijo)
+
+tileset:
+* eliminar duplicados
+* eliminar tiles repetidos volteados ¿y rotados?
+* reducir colores
+* elegir color de fondo
+* etc.
+
+
+background:
+- paletas
+- reducción de tiles -> crear .bin, tileset reducido
+- pintar las paletas
+
+
+
