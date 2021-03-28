@@ -75,8 +75,7 @@ class MainWidget(QMainWindow):
         self.setCentralWidget(self.central_widget)
     
     def connect_signals(self):
-        self.create_sprite_action.triggered.connect(self.central_widget.add_tab)
-        pass
-        # action1.triggered.connect(self.central_widget.add_tab)
-        # action2.triggered.connect(self.del_tab)
+        self.create_sprite_action.triggered.connect(self.central_widget.add_sprite_editor_tab)
+        self.create_tileset_action.triggered.connect(self.central_widget.add_tileset_editor_tab)
+        self.create_background_action.triggered.connect(self.central_widget.add_background_editor_tab)
 
