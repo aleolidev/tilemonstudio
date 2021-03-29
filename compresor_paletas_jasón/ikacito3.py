@@ -21,9 +21,11 @@
 from typing import List, Dict, Set, FrozenSet, Tuple
 import random
 import heapq as hq
+from functools import reduce
+from more_itertools import peekable
 
 
-from params import LIMIT, MAX_DEPTH, OPTION
+from params import LIMIT, MAX_DEPTH, OPTION, NUM_TILES
 
 
 
@@ -204,57 +206,55 @@ def construir_camino(grafo: dict, nodo: tuple) -> list:
 
 """
 
-un camino es el conjunto de paletas que voy a seleccionar
-puedo llevar registro también de qué tiles ya tengo, así no lo recalculo constantemente
+    un camino es el conjunto de paletas que voy a seleccionar
+    puedo llevar registro también de qué tiles ya tengo, así no lo recalculo constantemente
 
-1. los nodos no pueden tener un padre, tengo que guardar los caminos de otra forma.
-
-
-sí o sí, con n tiles, el camino más largo puede ser de largo n, pero esa restricción está
-implícita al descartar nodos que no te sirve mirar
+    1. los nodos no pueden tener un padre, tengo que guardar los caminos de otra forma.
 
 
-duda: voy a revisar en amplitud o en profundidad?
-lo suyo sería amplitud, quiero el clique más pequeño
-
-g = largo camino (todas las aristas pesan 1)
-h = el nodo más grande
-
-f = g +' h
-
-mira, si ya pasé por un nodo con un camino, puedo volver a pasar por él tomando otro camino,
-aunque el padre directo sea el mismo
+    sí o sí, con n tiles, el camino más largo puede ser de largo n, pero esa restricción está
+    implícita al descartar nodos que no te sirve mirar
 
 
-cuando inicio, tengo UN nodo en mi frontera (n0)
-voy a armar todos los caminos posibles y voy a guardar los caminos de c/u
+    duda: voy a revisar en amplitud o en profundidad?
+    lo suyo sería amplitud, quiero el clique más pequeño
 
-luego, para cada camino le calculo su frontera y expando
+    g = largo camino (todas las aristas pesan 1)
+    h = el nodo más grande
 
+    f = g +' h
 
-var caminos_actual: list[list[tuple[int]]]  # camino = lista de nodos (nodos := tupla de ints (tiles ids))
-var caminos_proxim: list[list[tuple[int]]]  # lo mismo de arriba
-
-while len(caminos_actual) > 0:
-    caminos_proxim = []
-    for camino in caminos_actual:
-        
-
-var caminos_actual: list[dict[tuple[int], set[tuple[int]]]]
-# guardo los que me quedan por ver
+    mira, si ya pasé por un nodo con un camino, puedo volver a pasar por él tomando otro camino,
+    aunque el padre directo sea el mismo
 
 
-{
-    cam_1: nodos que ya he revisado al 100%
-    cam_1 + un nodo: nodos que ya he revisado al 100%
-    etc
-}
+    cuando inicio, tengo UN nodo en mi frontera (n0)
+    voy a armar todos los caminos posibles y voy a guardar los caminos de c/u
+
+    luego, para cada camino le calculo su frontera y expando
+
+
+    var caminos_actual: list[list[tuple[int]]]  # camino = lista de nodos (nodos := tupla de ints (tiles ids))
+    var caminos_proxim: list[list[tuple[int]]]  # lo mismo de arriba
+
+    while len(caminos_actual) > 0:
+        caminos_proxim = []
+        for camino in caminos_actual:
+            
+
+    var caminos_actual: list[dict[tuple[int], set[tuple[int]]]]
+    # guardo los que me quedan por ver
+
+
+    {
+        cam_1: nodos que ya he revisado al 100%
+        cam_1 + un nodo: nodos que ya he revisado al 100%
+        etc
+    }
 """
 
 def calcular_acumulados(camino):
-    tengo = set()
-    for nodo in camino:
-        tengo.update(nodo)
+    tengo = reduce(lambda x, y: x.union(y), camino, set())
     return tengo
 
 
@@ -339,13 +339,14 @@ def node_bin_packing_solver_aestrella_ish(grafo, nodo_inicio, espacio_total, ret
 
 def sacar_vecinos_filtrados(grafo, camino):
     tengo = calcular_acumulados(camino)
-    return list(filter(lambda x: len(tengo.intersection(x)) == 0, grafo[camino[-1]]["vecinos"]))
+    return filter(lambda x: len(tengo.intersection(x)) == 0, grafo[camino[-1]]["vecinos"])
 
 
 
-def node_bin_packing_solver_dfs(grafo, nodo_inicio, espacio_total, return_first=False, use_max_depth=False, max_depth=MAX_DEPTH):
+def node_bin_packing_solver_dfs(grafo, nodo_inicio, espacio_total, caminos_vistos: set=set(), return_first=False, keep_one=True, use_max_depth=False, max_depth=MAX_DEPTH):
     soluciones = []
     mejor_largo = None
+    largo_objetivo = None
     
 
     # STACK de tuplas (largo, camino, abiertos-no-explorados)
@@ -357,16 +358,34 @@ def node_bin_packing_solver_dfs(grafo, nodo_inicio, espacio_total, return_first=
         """
         
         largo, camino, abiertos_no_explorados = caminos_open[-1]  # .pop()
-        if len(abiertos_no_explorados) == 0:
+        try:
+            prox_nodo = next(abiertos_no_explorados)
+        except StopIteration:
             # vacié esta ruta y tengo que volver!
             caminos_open.pop()
             continue
-        prox_nodo = abiertos_no_explorados.pop()
+        # if len(abiertos_no_explorados) == 0:
+        #     # vacié esta ruta y tengo que volver!
+        #     caminos_open.pop()
+        #     continue
+        if largo_objetivo is not None and largo >= largo_objetivo:
+            # me pasé del target
+            caminos_open.pop()
+            continue
+        elif mejor_largo is not None and largo >= mejor_largo:
+            # ya estoy pasado del largo óptimo que encontré antes
+            caminos_open.pop()
+            continue
         
         camino_nuevo = camino + [prox_nodo]  # Expando el camino en un nodo
+        fs_camino_nuevo = frozenset(camino_nuevo)
+        if fs_camino_nuevo in caminos_vistos:
+            # este ya lo vi, no lo quiero, está viejo.
+            continue
+        caminos_vistos.add(fs_camino_nuevo)
         vecinos_filtrados = sacar_vecinos_filtrados(grafo, camino_nuevo)  # Filtro las posibles expansiones futuras
         
-        if len(vecinos_filtrados) == 0:
+        if peekable(vecinos_filtrados):
             # Si no me puedo expandir eso quiere decir que ya tengo todos los nodos
             if return_first:
                 # OJO! no es el mejor
@@ -389,6 +408,8 @@ def node_bin_packing_solver_dfs(grafo, nodo_inicio, espacio_total, return_first=
                 
             else:  # mejor_largo es mejor que el actual
                 continue
+            largo_objetivo = largo
+            print("Largo objetivo:", largo_objetivo)
 
         else:
             if mejor_largo is not None and largo + 1 >= mejor_largo:  # PODA!
@@ -396,7 +417,6 @@ def node_bin_packing_solver_dfs(grafo, nodo_inicio, espacio_total, return_first=
                     Poda: quito los que tendrán el mismo o mayor largo que el mejor hasta ahora porque
                             los con igual largo, al sacarlos, este automáticamente aumentará en uno, así
                             que no tiene mucho sentido dejarlos como candidatos.
-                          
                 """
                 # caminos_open.pop()
                 continue
@@ -442,7 +462,7 @@ agrego a los que me quedan a la open
 if __name__ == "__main__":
     # def generar_paletas(num_tiles, max_colore)
     paletas = set()
-    for _ in range(20):
+    for _ in range(NUM_TILES):
         generado = [random.randint(0, 32) for _ in range(random.randint(1, 16))]
         generado = tuple(set(generado))
         paletas.add(generado)
@@ -474,19 +494,20 @@ if __name__ == "__main__":
     print("Num nodos:", num_nodos)
     print("Num aristas:", cont_aristas)
     nodos_por_tamaño = sorted(grafo.keys(), key=lambda x: len(x), reverse=True)
-    print(nodos_por_tamaño[0], nodos_por_tamaño[-1])
-    print(grafo[nodos_por_tamaño[0]])
+    # print(nodos_por_tamaño[0], nodos_por_tamaño[-1])
+    # print(grafo[nodos_por_tamaño[0]])
     # exit()
     for nodo in nodos_por_tamaño:
         grafo[nodo]["vecinos"].sort(key=lambda x: len(x), reverse=True)  # me ordena los vecinos para primero mirar los más grandes
     
     print("EMPEZAMOS LA BÚSQUEDA!")
-    
-    print(set(range(len(tiles))))
+    caminos_vistos = set()
+    # print(set(range(len(tiles))))
     nodo = nodos_por_tamaño[0]
-    caminos, largo = node_bin_packing_solver_dfs(grafo, nodo, set(range(len(tiles))), return_first=False)
+    caminos, largo = node_bin_packing_solver_dfs(grafo, nodo, set(range(len(tiles))), caminos_vistos, return_first=False)
     print(caminos)
     print(largo)
+    print(len(caminos_vistos))
     
     
     
