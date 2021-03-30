@@ -1,17 +1,16 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, QTabBar, QTabWidget
-from PyQt5.QtCore import pyqtSignal
 
 from frontend.central_widget import CentralWidget
 
 
 class MainWidget(QMainWindow):
     
-    trigger_create_sprite = pyqtSignal(str, int)
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Tilemon Studio - Remake")
-        self.setMinimumHeight(400)
-        self.setMinimumWidth(500)
+        self.resize(600, 500)
+        # self.setMinimumHeight(400)
+        # self.setMinimumWidth(500)
         self.load_gui()
         self.connect_signals()
 
@@ -79,15 +78,6 @@ class MainWidget(QMainWindow):
         self.setCentralWidget(self.central_widget)
     
     def connect_signals(self):
-        self.trigger_create_sprite.connect(self.central_widget.add_sprite_editor_tab)
-        # self.create_sprite_action.triggered.connect(self.central_widget.add_sprite_editor_tab)
-        self.create_sprite_action.triggered.connect(self.create_sprite)
+        self.create_sprite_action.triggered.connect(self.central_widget.add_sprite_editor_tab)
         self.create_tileset_action.triggered.connect(self.central_widget.add_tileset_editor_tab)
         self.create_background_action.triggered.connect(self.central_widget.add_background_editor_tab)
-        
-    def create_sprite(self):
-        # pop-up cargar archivo
-        # recibir nombre
-        # pasárselo al emitir la señal
-        self.trigger_create_sprite.emit("hola", 2)
-

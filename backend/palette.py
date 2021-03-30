@@ -32,7 +32,7 @@ class Palette:
             ),
             (0, 0, 0, 0)
         )
-        void_temp_palette_image.psate(base_tile, (0, 0))
+        void_temp_palette_image.paste(base_tile, (0, 0))
         for i in range(4):  # TODO: testear si pueden estar en el mismo loop!
             void_temp_palette_image.paste(void_temp_palette_image, ((2**i) * 8, 0))
             void_temp_palette_image.paste(void_temp_palette_image, (0, ((2**i) * 8)))

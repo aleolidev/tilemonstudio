@@ -3,8 +3,6 @@ from PyQt5.QtWidgets import QApplication
 
 from frontend.main_widget import MainWidget
 
-
-
 if __name__ == "__main__":
     def hook(type_, value, traceback):
         print(type_)
