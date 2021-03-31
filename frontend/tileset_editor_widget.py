@@ -10,4 +10,6 @@ class TilesetEditorWidget(EditorWidget):
         self.trigger_set_palette_clickable.emit()
 
         self.left_lay.addStretch()
-
+    
+    def save_file(self):
+        print("Tileset saving unavailable")

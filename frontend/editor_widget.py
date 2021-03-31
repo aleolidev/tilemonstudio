@@ -187,6 +187,13 @@ class EditorWidget(QWidget):
 
         # pal_widget.show_color_label.clicked.connect(lambda: self.pick_color_function)
 
+    def reduce_sprite_palette(self, max_colors):
+        if self.palette.palette.shape[0] > max_colors:
+            self.image.rgb_image = self.image.reduct_palettes(max_colors)
+            self.update_scaled_img()
+            self.update_palette_viewer()
+            
+
     def register_new_action(self, action):
         if self.action_queue_index == len(self.actions_queue) - 1:
             # si estoy apuntando al tope del stack, lo añades encima
@@ -231,6 +238,24 @@ class EditorWidget(QWidget):
         img = img.scaled(width, height, Qt.KeepAspectRatio, Qt.FastTransformation)
         self.set_viewer_image(img)
 
+    def update_palette_viewer(self):
+        raw_palette = np.array(self.image.rgb_image.getcolors(maxcolors=65536), dtype="object")[:,1]
+
+        # Put in first place the background color
+        index_contains_bg_color = np.array(list(map(lambda x: x== self.image.bg_color, raw_palette)))
+        contains_bg_color = np.where(index_contains_bg_color)
+        if contains_bg_color[0]:
+            raw_palette = np.delete(raw_palette, contains_bg_color[0])
+        pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
+        if contains_bg_color[0]:
+            pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
+
+        self.palette.palette = np.array(pal_sorted_by_color)
+        self.palette.raw_palette_img = create_image_from_palette(np.array(pal_sorted_by_color))
+        palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
+        self.palette_widget.palettes_label.setPixmap(palette_viewer)
+        self.palette_widget.palettes_label.resize(palette_viewer.size())
+
     def pick_color_function(self, event):
         pal_widget = self.palette_widget
         bg_color = self.image.bg_color
@@ -247,31 +272,30 @@ class EditorWidget(QWidget):
             index_exist_bg_color = np.array(list(map(lambda x: x== col, raw_palette)))
             exist_bg_color = np.where(index_exist_bg_color)
             # TODO: Not working right, sometimes don't detect the colors
+            if exist_bg_color[0] == False:
+                pass  # TODO: Raise error
+            self.image.bg_color = col
+            rgb_color = ImageColor.getcolor(qcol.name(), "RGB")
+            pal_widget.show_color_label.setText(qcol.name())
+
             if exist_bg_color[0]:
-                self.image.bg_color = col
-                rgb_color = ImageColor.getcolor(qcol.name(), "RGB")
-                pal_widget.show_color_label.setText(qcol.name())
-
                 raw_palette = np.delete(raw_palette, exist_bg_color[0])
-                pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
-                pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
-                
-                self.palette.palette = pal_sorted_by_color
-                self.palette.raw_palette_img = create_image_from_palette(pal_sorted_by_color)
+            pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
+            pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
+            
+            self.palette.palette = pal_sorted_by_color
+            self.palette.raw_palette_img = create_image_from_palette(pal_sorted_by_color)
 
-                palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
-                self.palette_widget.palettes_label.setPixmap(palette_viewer)
-                self.palette_widget.palettes_label.resize(palette_viewer.size())
+            palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
+            self.palette_widget.palettes_label.setPixmap(palette_viewer)
+            self.palette_widget.palettes_label.resize(palette_viewer.size())
 
-                self.palette_widget.set_color_data(self.palette.palette[self.palette.color_picked])
+            self.palette_widget.set_color_data(self.palette.palette[self.palette.color_picked])
 
-                if get_color_value(np.array(rgb_color)) < 500:
-                    pal_widget.show_color_label.setStyleSheet("background-color: " + qcol.name() + "; color: #fff;")
-                else:
-                    pal_widget.show_color_label.setStyleSheet("background-color: " + qcol.name() + "; color: #222;")
+            if get_color_value(np.array(rgb_color)) < 500:
+                pal_widget.show_color_label.setStyleSheet("background-color: " + qcol.name() + "; color: #fff;")
             else:
-                # TODO: Raise error
-                pass
+                pal_widget.show_color_label.setStyleSheet("background-color: " + qcol.name() + "; color: #222;")
         else:
             # TODO: Raise error
             pass

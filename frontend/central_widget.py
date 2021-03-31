@@ -36,21 +36,27 @@ class CentralWidget(QWidget):
         # TODO: check if work is saved, show pop-up
         self.tab_bar.removeTab(index)
 
-    def add_sprite_editor_tab(self):
+    def add_sprite_editor_tab(self, save_option):
         sprite_editor_tab = SpriteEditorWidget()
         if sprite_editor_tab.sprite != None:
+            if not save_option.isEnabled():
+                save_option.setEnabled(True)
             self.add_tab("[S] " + sprite_editor_tab.file_name, sprite_editor_tab)
             self.c += 1
 
-    def add_tileset_editor_tab(self):
+    def add_tileset_editor_tab(self, save_option):
         tileset_editor_tab = TilesetEditorWidget()
         if tileset_editor_tab.tileset != None:
+            if not save_option.isEnabled():
+                save_option.setEnabled(True)
             self.add_tab("[T] " + tileset_editor_tab.file_name, tileset_editor_tab)
             self.c += 1
     
-    def add_background_editor_tab(self):
+    def add_background_editor_tab(self, save_option):
         background_editor_tab = BackgroundEditorWidget()
         if background_editor_tab.background != None:
+            if not save_option.isEnabled():
+                save_option.setEnabled(True)
             self.add_tab("[B] " + background_editor_tab.file_name, background_editor_tab)
             self.c += 1
 

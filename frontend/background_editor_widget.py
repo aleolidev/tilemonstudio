@@ -11,3 +11,5 @@ class BackgroundEditorWidget(EditorWidget):
 
         self.left_lay.addStretch()
 
+    def save_file(self):
+        print("Background saving unavailable")

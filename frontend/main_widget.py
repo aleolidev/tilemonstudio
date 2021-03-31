@@ -17,7 +17,7 @@ class MainWidget(QMainWindow):
     def load_gui(self):
         self.menu_bar = self.menuBar()
         # ACTIONS!
-        self.create_sprite_action = QAction("&Create Sprite", self)
+        # self.create_sprite_action = QAction("&Create Sprite", self)
         self.load_sprite_action = QAction("&Load Sprite", self)
         self.create_tileset_action = QAction("&Create Tileset", self)
         self.load_tileset_action = QAction("&Load Tiileset", self)
@@ -36,7 +36,7 @@ class MainWidget(QMainWindow):
         # MENUS!
         self.file_menu = self.menu_bar.addMenu("&File")
         self.file_menu.addActions([
-            self.create_sprite_action,
+            # self.create_sprite_action,
             self.load_sprite_action,
             self.create_tileset_action,
             self.create_background_action,
@@ -57,8 +57,8 @@ class MainWidget(QMainWindow):
             self.about_action
         ])
         # SHORTCUTS!
-        self.create_sprite_action.setShortcut("Ctrl+I")
-        self.load_sprite_action.setShortcut("Ctrl+Shift+I")
+        self.load_sprite_action.setShortcut("Ctrl+I")
+        # self.load_sprite_action.setShortcut("Ctrl+Shift+I")
         self.save_work_action.setShortcut("Ctrl+S")
         self.exit_action.setShortcut("Ctrl+Q")
         
@@ -78,6 +78,7 @@ class MainWidget(QMainWindow):
         self.setCentralWidget(self.central_widget)
     
     def connect_signals(self):
-        self.create_sprite_action.triggered.connect(self.central_widget.add_sprite_editor_tab)
-        self.create_tileset_action.triggered.connect(self.central_widget.add_tileset_editor_tab)
-        self.create_background_action.triggered.connect(self.central_widget.add_background_editor_tab)
+        self.load_sprite_action.triggered.connect(lambda: self.central_widget.add_sprite_editor_tab(self.save_work_action))
+        self.create_tileset_action.triggered.connect(lambda: self.central_widget.add_tileset_editor_tab(self.save_work_action))
+        self.create_background_action.triggered.connect(lambda: self.central_widget.add_background_editor_tab(self.save_work_action))
+        self.save_work_action.triggered.connect(lambda: self.central_widget.tab_bar.currentWidget().save_file())

@@ -30,17 +30,19 @@ class PaletteWidget(QWidget):
         self.edit_color_selected_label.setFixedSize(32, 32)
 
         self.edit_color_red_layout = QVBoxLayout()
-        self.edit_color_red_layout.setContentsMargins(QMargins(0, 3, 0, 3))
+        # self.edit_color_red_layout.setContentsMargins(QMargins(0, 3, 0, 3))
         self.edit_color_green_layout = QVBoxLayout()
-        self.edit_color_green_layout.setContentsMargins(QMargins(0, 3, 0, 3))
+        # self.edit_color_green_layout.setContentsMargins(QMargins(0, 3, 0, 3))
         self.edit_color_blue_layout = QVBoxLayout()
-        self.edit_color_blue_layout.setContentsMargins(QMargins(0, 3, 0, 3))
+        # self.edit_color_blue_layout.setContentsMargins(QMargins(0, 3, 0, 3))
 
         self.edit_color_group_layout = QVBoxLayout()
         self.edit_color_label_layout = QHBoxLayout()
         self.edit_color_scrolls_layout = QHBoxLayout()
 
         # Red Slider
+        self.red_label_r = QLabel("R")
+
         self.red_slider = QSlider(Qt.Vertical, self)
         self.red_slider.setRange(0, 255)
         self.red_slider.setFixedSize(24, 96)
@@ -50,10 +52,13 @@ class PaletteWidget(QWidget):
         self.red_spin_box.setRange(0, 255)
         self.red_spin_box.setFixedSize(40, 16)
 
+        self.edit_color_red_layout.addWidget(self.red_label_r, alignment=Qt.AlignCenter)
         self.edit_color_red_layout.addWidget(self.red_slider, alignment= Qt.AlignCenter)
         self.edit_color_red_layout.addWidget(self.red_spin_box, alignment= Qt.AlignCenter)
 
         # Green Slider
+        self.green_label_g = QLabel("G")
+
         self.green_slider = QSlider(Qt.Vertical)
         self.green_slider.setRange(0, 255)
         self.green_slider.setFixedSize(24, 96)
@@ -63,10 +68,13 @@ class PaletteWidget(QWidget):
         self.green_spin_box.setRange(0, 255)
         self.green_spin_box.setFixedSize(40, 16)
 
+        self.edit_color_green_layout.addWidget(self.green_label_g, alignment=Qt.AlignCenter)
         self.edit_color_green_layout.addWidget(self.green_slider, alignment= Qt.AlignCenter)
         self.edit_color_green_layout.addWidget(self.green_spin_box, alignment= Qt.AlignCenter)
 
         # Blue Slider
+        self.blue_label_b = QLabel("B")
+
         self.blue_slider = QSlider(Qt.Vertical, self)
         self.blue_slider.setRange(0, 255)
         self.blue_slider.setFixedSize(24, 96)
@@ -76,6 +84,7 @@ class PaletteWidget(QWidget):
         self.blue_spin_box.setRange(0, 255)
         self.blue_spin_box.setFixedSize(40, 16)
 
+        self.edit_color_blue_layout.addWidget(self.blue_label_b, alignment=Qt.AlignCenter)
         self.edit_color_blue_layout.addWidget(self.blue_slider, alignment= Qt.AlignCenter)
         self.edit_color_blue_layout.addWidget(self.blue_spin_box, alignment= Qt.AlignCenter)
 
@@ -87,7 +96,7 @@ class PaletteWidget(QWidget):
 
         self.edit_color_group_layout.addLayout(self.edit_color_label_layout)
         self.edit_color_group_layout.addLayout(self.edit_color_scrolls_layout)
-        self.edit_color_groupbox = QGroupBox("Edit color")  # TODO: archivo de traducción!
+        self.edit_color_groupbox = QGroupBox("Color")  # TODO: archivo de traducción!
         self.edit_color_groupbox.setLayout(self.edit_color_group_layout)
 
         self.lay = QVBoxLayout()
@@ -133,7 +142,7 @@ class PaletteWidget(QWidget):
         custom_slider_css = """
                     .QSlider::groove:vertical {
                         border: 0px solid #262626;
-                        width: 16px;""" + self.generate_gradient(rgb_index) + """margin: 8px 0;
+                        width: 16px;""" + self.generate_gradient(rgb_index) + """margin: 4px 0;
                     }
                     .QSlider::handle:vertical {
                         width: 0;
@@ -190,9 +199,6 @@ class PaletteWidget(QWidget):
         self.palettes_label.setPixmap(pil_to_pixmap(palette.get_paletteviewer_image()))
 
         # Sprite Image
-        # image.rgb_image = replace_color_in_image((0, 0, 255), (0, 255, 0), image.rgb_image)
-        # image.rgb_image = replace_color_in_image((0, 255, 0), (255, 0, 0), image.rgb_image)
-        # image.rgb_image = replace_color_in_image((255, 0, 0), (0, 0, 0), image.rgb_image)
         image.rgb_image = replace_color_in_image(color, old_color, image.rgb_image)
         update_scaled_img()
 

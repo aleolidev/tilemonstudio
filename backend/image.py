@@ -138,8 +138,8 @@ class Image:
             return image
     
     # Reduct palettes by threshold
-    def reduct_palettes(self, image, max_colors, method):
-        img = image.copy()
+    def reduct_palettes(self, max_colors):
+        img = self.rgb_image.copy()
         bg_color_rgba = (
             self.bg_color[0],
             self.bg_color[1],
@@ -147,44 +147,10 @@ class Image:
             255
         )
         img = self.replace_color_in_image_alpha((0, 0, 0, 0), bg_color_rgba, img)
-        pal = img.getcolors()
-        if method < 2:  # FIXME: y usar enums??
-            while len(pal) > max_colors:
-                s_threshold = 1
-                i1, i2 = 0, 0
-                for x in range(len(pal)):
-                    for y in range(x+1, len(pal)):
-                        if pal[x][1][3] == 255 and pal[y][1][3] == 255:
-                            c_threshold = self.get_color_difference(pal[x][1], pal[y][1])
-                            if c_threshold < s_threshold:
-                                s_threshold = c_threshold
-                                i1, i2 = x, y
-            if method == 1:
-                if method == 1:
-                    avg_color = (
-                        int((pal[i1][1][0] + pal[i2][1][0])/2), 
-                        int((pal[i1][1][1] + pal[i2][1][1])/2), 
-                        int((pal[i1][1][2] + pal[i2][1][2])/2), 
-                        255)
-                    img = self.replace_color_in_image_alpha(avg_color, pal[i1][1], img)
-                    img = self.replace_color_in_image_alpha(avg_color, pal[i2][1], img)
-                    del pal[i2]
-                    del pal[i1]
-                    # Pixels amount are irrelevant in this method
-                    pal.append((0, avg_color))
-                else:
-                    if pal[i1][0] > pal[i2][0]:
-                        img = self.replace_color_in_image_alpha(pal[i1][1], pal[i2][1], img)
-                        del pal[i2]
-                    else:
-                        img = self.replace_color_in_image_alpha(pal[i2][1], pal[i1][1], img)
-                        del pal[i1]
-            img = self.replace_color_in_image_alpha(bg_color_rgba, (0, 0, 0, 0), img)
-        else:
-            img_arr = quantize(np.array(img), max_colors)
-            img_arr = np.uint8(img_arr)
-            img_arr = self.replace_color_in_image_alpha(bg_color_rgba, (0, 0, 0, 0), img_arr)
-            img = pim.fromarray(np.uint8(img_arr))
+        img_arr = quantize(np.array(img), max_colors)
+        img_arr = np.uint8(img_arr)
+        img_arr = self.replace_color_in_image_alpha(bg_color_rgba, (0, 0, 0, 0), img_arr)
+        img = pim.fromarray(np.uint8(img_arr)).convert('RGB')
         return img
     
     def get_color_difference(self, color1, color2):
@@ -237,12 +203,17 @@ class Image:
     
     def replace_color_in_image_alpha(self, new_color, old_color, image):
         data = np.array(image)
+
         r1, g1, b1, a1 = old_color
         r2, g2, b2, a2 = new_color
-        red, green, blue, alpha = data[:, :, 0], data[:, :, 1], data[:, :, 2], data[:, :, :3]
+        if data.shape[2] == 3:
+            alpha = np.full((data.shape[0], data.shape[1], 1), 255)
+            data = np.append(data, alpha, axis=2)
+        red, green, blue, alpha = data[:, :, 0], data[:, :, 1], data[:, :, 2], data[:, :, 3]
         mask = (red == r1) & (green == g1) & (blue == b1) & (alpha == a1)
         data[:, :, :4][mask] = [r2, g2, b2, a2]
-        return pim.fromarray(data)
+
+        return pim.fromarray(np.uint8(data))
     
     def get_more_abundant_color_between(self, color1, color2, image):
         color_1_counter, color_2_counter = 0, 0
