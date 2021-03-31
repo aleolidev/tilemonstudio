@@ -24,6 +24,9 @@ def create_image_from_palette(palette):
     return image
 
 
+def get_color_value(color):
+    return int(int(color[0]) + int(color[1]) + int(color[2]))
+
 def color_sort_criteria(color):
     hasv_color = colorsys.rgb_to_hsv(*np.array(color) / 255.)
     return hasv_color

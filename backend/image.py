@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from backend.palette import Palette
 from backend.color_utilities import pixmap_to_pil, pil_to_pixmap, quantize, step
+from PyQt5.QtGui import QPixmap
 from PIL import Image as pim
 import numpy as np
 import colorsys
@@ -13,7 +14,7 @@ class Tile:
     
 
 class Image:
-    def __init__(self, raw_pixmap):
+    def __init__(self, raw_pixmap: QPixmap):
         self.raw_pixmap = raw_pixmap
         self.bg_color = self.get_bg_color(np.array(pixmap_to_pil(raw_pixmap)))
         self.rgb_image = self.rgba_to_rgb_and_background_color(pixmap_to_pil(raw_pixmap), self.bg_color)
@@ -202,7 +203,7 @@ class Image:
         img = image.copy()
         if img.shape[2] == 4:
             img = img.reshape(-1, 4)
-            print(img[img[:, 3] == 255])
+            # print(img[img[:, 3] == 255])
             all_colors = img[img[:, 3] == 255]
         elif img.shape[2] == 3:
             img = img.reshape(-1, 3)
@@ -224,9 +225,6 @@ class Image:
             bg_color = colorsys.hsv_to_rgb(*hsv_color)
             bg_color = tuple((np.array(bg_color) * 255).astype(np.uint8))
         return bg_color
-        
-    def get_color_value(self, color):
-        return int(int(color[0]) + int(color[1]) + int(color[2]))
     
     def rgba_to_rgb_and_background_color(self, img, color):
         if len(img.getcolors()[0][1]) > 3:

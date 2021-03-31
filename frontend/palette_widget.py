@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QScrollArea, QSpacerItem
-from PyQt5.QtWidgets import QLabel, QSlider, QPushButton, QGroupBox, QSpinBox
+from PyQt5.QtWidgets import QLabel, QSlider, QPushButton, QGroupBox, QSpinBox, QSizePolicy
 from PyQt5.QtGui import QColor, QIcon, QPixmap, QCursor
 from PyQt5.QtCore import QMargins, QSignalBlocker, pyqtSignal
 from backend.color_utilities import create_image_from_palette, replace_color_in_image
@@ -23,6 +23,7 @@ class PaletteWidget(QWidget):
         self.palettes_group_layout.addWidget(self.palettes_label, alignment=Qt.AlignCenter)
         self.palette_groupbox = QGroupBox("Palettes")  # TODO: archivo de traducción!
         self.palette_groupbox.setLayout(self.palettes_group_layout)
+        self.palette_groupbox.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
         
         # TODO: Set Color after create PaletteWidget, and after change selected index
         self.edit_color_selected_label = QLabel("")
@@ -146,17 +147,15 @@ class PaletteWidget(QWidget):
         return custom_slider_css
 
     def generate_gradient(self, rgb_index):
+        black = (0, 0, 0)
         if rgb_index == 1:
-            low_color = (0, 0, 0)
             high_color = (0, 255, 0)
         elif rgb_index == 2:
-            low_color = (0, 0, 0)
             high_color = (0, 0, 255)
         else:
-            low_color = (0, 0, 0)
             high_color = (255, 0, 0)
 
-        linear_gradient = "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb" + str(low_color).replace(" ", "") + ", stop: 1 rgb" + str(high_color).replace(" ", "") + ");"
+        linear_gradient = "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb" + str(high_color).replace(" ", "") + ", stop: 1 rgb" + str(black).replace(" ", "") + ");"
         return linear_gradient
 
     def slider_changed(self, palette, image, update_scaled_img):
