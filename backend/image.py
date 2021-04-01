@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from backend.palette import Palette
-from backend.color_utilities import pixmap_to_pil, pil_to_pixmap, quantize, step
+from backend.color_utilities import step, round_to_multiple_of, quantize
+from backend.color_utilities import pixmap_to_pil, pil_to_pixmap
 from PyQt5.QtGui import QPixmap
 from PIL import Image as pim
 import numpy as np
@@ -14,6 +15,7 @@ class Tile:
     
 
 class Image:
+    TO_ROUND_VALUE = 8
     def __init__(self, raw_pixmap: QPixmap):
         self.raw_pixmap = raw_pixmap
         self.bg_color = self.get_bg_color(np.array(pixmap_to_pil(raw_pixmap)))
@@ -152,6 +154,21 @@ class Image:
         img_arr = self.replace_color_in_image_alpha(bg_color_rgba, (0, 0, 0, 0), img_arr)
         img = pim.fromarray(np.uint8(img_arr)).convert('RGB')
         return img
+
+    def palette_to_4bpp_format(self, image):
+        img = image.copy()
+        pal = np.array(img.getcolors(maxcolors=65536), dtype="object")[:,1]
+
+        for col in pal:
+            r_4bpp = round_to_multiple_of(col[0], self.TO_ROUND_VALUE)
+            g_4bpp = round_to_multiple_of(col[1], self.TO_ROUND_VALUE)
+            b_4bpp = round_to_multiple_of(col[2], self.TO_ROUND_VALUE)
+            col_4bpp = (r_4bpp, g_4bpp, b_4bpp)
+            if self.bg_color == col:
+                self.bg_color = col_4bpp
+            img = self.replace_color_in_image(col_4bpp, col, img)
+        
+        return img
     
     def get_color_difference(self, color1, color2):
         r_diff = abs(float(color1[0] - color2[0]) / 2.0)
@@ -200,6 +217,17 @@ class Image:
             return image
         else:
             return img
+
+    def replace_color_in_image(self, new_color, old_color, image):
+        data = np.array(image)
+
+        r1, g1, b1 = old_color
+        r2, g2, b2 = new_color
+        red, green, blue = data[:, :, 0], data[:, :, 1], data[:, :, 2]
+        mask = (red == r1) & (green == g1) & (blue == b1)
+        data[:, :, :3][mask] = [r2, g2, b2]
+
+        return pim.fromarray(np.uint8(data))
     
     def replace_color_in_image_alpha(self, new_color, old_color, image):
         data = np.array(image)

@@ -7,6 +7,7 @@ from backend.image import Image as cim
 from backend.palette import Palette as cpal
 from backend.color_utilities import get_color_value, pixmap_to_pil, pil_to_pixmap, step
 from backend.color_utilities import create_image_from_palette
+from PIL import Image as pim
 from PIL import ImageColor
 
 import numpy as np
@@ -187,11 +188,14 @@ class EditorWidget(QWidget):
 
         # pal_widget.show_color_label.clicked.connect(lambda: self.pick_color_function)
 
-    def reduce_sprite_palette(self, max_colors):
+    def index_sprite(self, max_colors):
         if self.palette.palette.shape[0] > max_colors:
             self.image.rgb_image = self.image.reduct_palettes(max_colors)
+            self.image.rgb_image = self.image.palette_to_4bpp_format(self.image.rgb_image)
             self.update_scaled_img()
             self.update_palette_viewer()
+            curr_picked_color = self.palette.palette[self.palette.color_picked]
+            self.palette_widget.set_color_data(curr_picked_color)
             
 
     def register_new_action(self, action):

@@ -1,11 +1,15 @@
 from PyQt5.QtWidgets import QLabel, QPushButton, QGroupBox, QVBoxLayout, QFileDialog
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtCore import Qt
+from PIL import Image as pim
+import math
 
 from frontend.editor_widget import EditorWidget
 
 
 class SpriteEditorWidget(EditorWidget):
+    RGB_COLOR_COUNT = 256
+    GRAYSCALE_COLOR_COUNT= 256
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.trigger_set_sprite_ui_images.emit()
@@ -26,13 +30,30 @@ class SpriteEditorWidget(EditorWidget):
 
         self.left_lay.addWidget(self.sprite_groupbox)
 
-        self.sprite_index_button.clicked.connect(lambda: self.reduce_sprite_palette(16))
+        self.sprite_index_button.clicked.connect(lambda: self.index_sprite(16))
 
     def save_file(self):
         file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', '', '*.png')
         if file_name != "":
+            pal = self.palette.palette
+            print(pal)
+            print(self.image.rgb_image.getpalette())
+            self.image.rgb_image = self.image.rgb_image.convert('P', colors=16)
             self.image.rgb_image.save(file_name)
         
+
+    def change_color_depth(self, image, color_count):
+        if image.mode == 'L':
+            raito = self.GRAYSCALE_COLOR_COUNT / color_count
+            change = lambda value: math.trunc(value/raito)*raito
+            return image.point(change)
+        
+        if image.mode == 'RGB' or image.mode == 'RGBA':
+            raito = self.RGB_COLOR_COUNT / color_count
+            change = lambda value: math.trunc(value/raito)*raito
+            return pim.eval(image, change)
+        
+        raise ValueError('Images in {mode} cannot de used.'.format(mode=image.mode))
 
             
 

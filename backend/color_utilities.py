@@ -87,3 +87,6 @@ def pixmap_to_pil(im):
     pil_img = pim.open(io.BytesIO(buff.data()))
     buff.close()
     return pil_img
+
+def round_to_multiple_of(x, multiple):
+    return multiple * round(x/multiple)
