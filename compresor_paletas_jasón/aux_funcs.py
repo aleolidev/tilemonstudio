@@ -1,5 +1,15 @@
 from functools import reduce
 
+from params import LIMIT
+
+
+def es_mochila_valida(mochila):
+    """
+        Entra una mochila cruda, sólo su contenido.
+    """
+    return len(reduce(lambda x, y: x.union(y), mochila, set())) < LIMIT
+
+
 
 def largo_paleta(paletas: list):
     p = set()
@@ -25,7 +35,7 @@ def combs_k_elementos(elementos: list, k: int):
     while True:
         if saltos[-1] >= len(elementos):
             pivote = k - 1
-            while pivote < k:  ## me muevo hacia la izquierda y después derecha!
+            while pivote < k:  # me muevo hacia la izquierda y después derecha!
                 if pivote != 0 and saltos[pivote - 1] == saltos[pivote] - 1:
                     pivote -= 1
                 else:
@@ -35,27 +45,22 @@ def combs_k_elementos(elementos: list, k: int):
         if saltos[-1] >= len(elementos):
             break
         yield saltos.copy()
-        # yield [elementos[i] for i in saltos]
         saltos[-1] += 1
 
 
-
-
 def construir_grafo(combinaciones):
-    grafo = {}
-    for nodo in combinaciones:
-        grafo[tuple(nodo)] = {
-            "vecinos": [],
-            "padre": None,
-        }
-    cont_aristas = 0
-    for nodo in grafo.keys():
-        for nodo_2 in grafo.keys():
-            if nodo != nodo_2 and len(set(nodo).intersection(nodo_2)) == 0:
-                grafo[nodo]["vecinos"].append(nodo_2)
-                grafo[nodo_2]["vecinos"].append(nodo)
-                cont_aristas += 1
-    return grafo, len(combinaciones), cont_aristas
+    grafo: list = [{"contenido": tuple(sorted(nodo)), "vecinos": []} for nodo in combinaciones]
+    grafo.sort(key=lambda x: len((x["contenido"])), reverse=True)  # ordenamos los nodos de más grandes a más pequeños
+    n_aristas = 0
+    for i in range(len(grafo)):
+        for k in range(i+1, len(grafo)):
+            n1 = grafo[i]
+            n2 = grafo[k]
+            if len(set(n1["contenido"]).intersection(n2["contenido"])) == 0:
+                n1["vecinos"].append(k)
+                n2["vecinos"].append(i)
+                n_aristas = n_aristas + 1
+    return grafo, len(grafo), n_aristas
 
 
 def es_solucion(sol_actual, k):
@@ -73,13 +78,15 @@ def actualizar_caminos_vistos(caminos_vistos, mejor_largo):
     return set(filter(lambda x: len(x) < mejor_largo, caminos_vistos))
 
 
-def calcular_acumulados(camino):
-    tengo = reduce(lambda x, y: x.union(y), camino, set())
+def calcular_acumulados(grafo, camino):
+    tengo = reduce(lambda x, y: x.union(grafo[y]["contenido"]), camino, set())
     return tengo
 
+
 def sacar_vecinos_filtrados(grafo, camino):
-    tengo = calcular_acumulados(camino)
-    return (filter(lambda x: len(tengo.intersection(x)) == 0, grafo[camino[-1]]["vecinos"]))
+    tengo = calcular_acumulados(grafo, camino)
+    query = filter(lambda x: len(tengo.intersection(grafo[x]["contenido"])) == 0, grafo[camino[-1]]["vecinos"])
+    return list(query)
 
 
 
