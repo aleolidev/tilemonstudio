@@ -6,7 +6,7 @@ from frontend.palette_widget import PaletteWidget
 from backend.image import Image as cim
 from backend.palette import Palette as cpal
 from backend.color_utilities import get_color_value, pixmap_to_pil, pil_to_pixmap, step
-from backend.color_utilities import create_image_from_palette
+from backend.color_utilities import create_image_from_palette, replace_color_in_image
 from PIL import Image as pim
 from PIL import ImageColor
 
@@ -62,7 +62,7 @@ class EditorWidget(QWidget):
 
     def load_image(self, type_of_image: str):
         try:
-            name, _ = QFileDialog.getOpenFileName(QFileDialog(),"Select " + type_of_image,"/","Image Files (*.png)")
+            name, _ = QFileDialog.getOpenFileName(QFileDialog(), "Select " + type_of_image, None, "Image Files (*.png)")
 
             if name != "":
                 self.file_name = QUrl.fromLocalFile(name).fileName()
@@ -191,11 +191,49 @@ class EditorWidget(QWidget):
     def index_sprite(self, max_colors):
         if self.palette.palette.shape[0] > max_colors:
             self.image.rgb_image = self.image.reduct_palettes(max_colors)
-            self.image.rgb_image = self.image.palette_to_4bpp_format(self.image.rgb_image)
-            self.update_scaled_img()
-            self.update_palette_viewer()
-            curr_picked_color = self.palette.palette[self.palette.color_picked]
-            self.palette_widget.set_color_data(curr_picked_color)
+        self.image.rgb_image = self.image.palette_to_4bpp_format(self.image.rgb_image)
+        self.update_scaled_img()
+        self.update_palette_viewer()
+        curr_picked_color = self.palette.palette[self.palette.color_picked]
+        self.palette_widget.set_color_data(curr_picked_color)
+        
+    def format_save_sprite(self):
+        im = self.image.rgb_image.quantize(16)
+        
+        old_pal = im.getpalette()
+        old_pal = [tuple(old_pal[x:x+3]) for x in range(0, len(old_pal), 3)]
+
+        # Format and set ordered palette
+        new_pal = list(self.palette.palette.flatten(order='C'))
+        if len(new_pal) < self.RGB_COLOR_COUNT*3:
+            new_pal = np.pad(new_pal, (0, (self.RGB_COLOR_COUNT*3)-len(new_pal)), 'constant')
+        new_pal = np.reshape(new_pal, (-1, 3))
+        new_pal = list(new_pal.flatten())
+        im.putpalette(new_pal)
+        
+        # Format image and palette
+        pal = im.getpalette()
+        pal = [tuple(pal[x:x+3]) for x in range(0, len(pal), 3)]
+        pal = pal[:16]
+        im = np.array(im)
+
+        # Get new palette distribution
+        pal_redistribution = [-1]*len(old_pal)
+
+        for i in range(len(old_pal)):
+            for j in range(len(pal)):
+                
+                if old_pal[i] == pal[j]:
+                    pal_redistribution[i] = j
+                    break
+
+        # Replace old color distribution in the image with new one
+        for i in range(im.shape[0]):
+            for j in range(np.array(im[i]).shape[0]):
+                im[i][j] = pal_redistribution[im[i][j]]
+
+        return im, pal
+        
             
 
     def register_new_action(self, action):

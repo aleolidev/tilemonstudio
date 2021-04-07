@@ -195,6 +195,8 @@ class PaletteWidget(QWidget):
 
         # Palette Data and Image
         palette.palette[palette.color_picked] = color
+        if palette.color_picked == 0:
+            image.bg_color = color 
         palette.raw_palette_img = create_image_from_palette(palette.palette)
         self.palettes_label.setPixmap(pil_to_pixmap(palette.get_paletteviewer_image()))
 

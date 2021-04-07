@@ -2,7 +2,9 @@ from PyQt5.QtWidgets import QLabel, QPushButton, QGroupBox, QVBoxLayout, QFileDi
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtCore import Qt
 from PIL import Image as pim
+import numpy as np
 import math
+import png
 
 from frontend.editor_widget import EditorWidget
 
@@ -33,13 +35,18 @@ class SpriteEditorWidget(EditorWidget):
         self.sprite_index_button.clicked.connect(lambda: self.index_sprite(16))
 
     def save_file(self):
-        file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', '', '*.png')
+        file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', self.file_name, '*.png')
         if file_name != "":
-            pal = self.palette.palette
-            print(pal)
-            print(self.image.rgb_image.getpalette())
-            self.image.rgb_image = self.image.rgb_image.convert('P', colors=16)
-            self.image.rgb_image.save(file_name)
+            im, pal = self.format_save_sprite()
+            
+            with open(file_name, 'wb') as f:
+                #png_writer = png.Writer(im.shape[1], im.shape[0], bitdepth=4)  # without palette
+                png_writer = png.Writer(im.shape[1], im.shape[0], bitdepth=4, palette=pal)  # with palette
+                png_writer.write(f, im)
+            # print(pal)
+            # print(self.image.rgb_image.getpalette())
+            # self.image.rgb_image = self.image.rgb_image.convert('P', colors=16)
+            # self.image.rgb_image.save(file_name)
         
 
     def change_color_depth(self, image, color_count):

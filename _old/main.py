@@ -465,9 +465,13 @@ class TilemonStudioWindow(QMainWindow):
             self.colorPicker.addWidget(self.pickColor)
             self.colorPicker.addItem(self.colorStretch)
 
-    def select_file(self, dialogName):
+    def select_file(self, dialog_name):
         try:
-            name, _ = QFileDialog.getOpenFileName(QFileDialog(), dialogName,"/","Image Files (*.png)")
+            if getattr(sys, 'frozen', False):
+                application_path = os.path.dirname(sys.executable)
+            elif __file__:
+                application_path = os.path.dirname(__file__)
+            name, _ = QFileDialog.getOpenFileName(QFileDialog(), dialog_name, application_path,"Image Files (*.png)")
 
             if name != "":
                 pixmap = QPixmap(name)
