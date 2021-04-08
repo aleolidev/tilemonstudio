@@ -2,7 +2,6 @@ tengo una serie de "objetos" con "pesos" que puedo meter en "bolsas", de cierta 
 
 tengo una función _u_ que mapea bolsas a booleanos, indicando si son válidas o no, por su peso.
 
-% tengo una función _p_ que me indica el "peso" de un objeto.
 
 tengo una función _q_ que mapea bolsas de objetos y un objeto a booleanos, indicando si el objeto puede ir en la bolsa o no. q(bolsa, objeto) -> {0, 1}.
 

@@ -156,6 +156,7 @@ class Image:
         return img
 
     def palette_to_4bpp_format(self, image):
+        bg_color_set = False
         img = image.copy()
         pal = np.array(img.getcolors(maxcolors=65536), dtype="object")[:,1]
 
@@ -165,8 +166,17 @@ class Image:
             b_4bpp = round_to_multiple_of(col[2], self.TO_ROUND_VALUE)
             col_4bpp = (r_4bpp, g_4bpp, b_4bpp)
             if self.bg_color == col:
+                bg_color_set = True
                 self.bg_color = col_4bpp
             img = self.replace_color_in_image(col_4bpp, col, img)
+        
+        # Index bg_color if not indexed
+        if not bg_color_set:
+            r_4bpp = round_to_multiple_of(self.bg_color[0], self.TO_ROUND_VALUE)
+            g_4bpp = round_to_multiple_of(self.bg_color[1], self.TO_ROUND_VALUE)
+            b_4bpp = round_to_multiple_of(self.bg_color[2], self.TO_ROUND_VALUE)
+            col_4bpp = (r_4bpp, g_4bpp, b_4bpp)
+            self.bg_color = col_4bpp
         
         return img
     
