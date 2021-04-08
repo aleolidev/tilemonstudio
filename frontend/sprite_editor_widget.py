@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QLabel, QPushButton, QGroupBox, QVBoxLayout, QFileDi
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtCore import Qt
 from PIL import Image as pim
-import numpy as np
 import math
 import png
 
