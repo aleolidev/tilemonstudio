@@ -26,7 +26,7 @@ class TilesetEditorWidget(EditorWidget):
         self.tileset_max_palettes_label.setStyleSheet("margin-top: 12px;")
         self.tileset_max_palettes_label.setFixedWidth(128)
         self.tileset_max_palettes_spinbox = QSpinBox()
-        self.tileset_max_palettes_spinbox.setRange(1, 6)
+        self.tileset_max_palettes_spinbox.setRange(1, 7)
         self.tileset_max_palettes_spinbox.setFixedWidth(128)
 
         self.tileset_process_button = QPushButton("Process Tileset")
@@ -49,8 +49,15 @@ class TilesetEditorWidget(EditorWidget):
 
         self.tileset_remove_rep_button.clicked.connect(lambda: self.remove_repeated_tiles(self.tileset_remove_flipped_checkbox.isChecked()))
 
+        self.tileset_process_button.clicked.connect(lambda: self.process_tileset(self.tileset_max_palettes_spinbox.value()))
+
     def remove_repeated_tiles(self, remove_flipped):
         pass
+
+    def process_tileset(self,max_palettes):
+        print("gonorrea hijueputa", max_palettes)
+        palettes = self.image.generate_palettes()
+        self.palette_widget.set_color_data(palettes)
 
     def save_file(self):
         print("Tileset saving unavailable")

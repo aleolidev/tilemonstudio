@@ -34,13 +34,18 @@ class Image:
         tile = Tile(tile_id, tile_pal, colors_amount)
         return tile
     
-    def generate_palettes(self):
+    def generate_palettes(self,N=9):
         self.slice_image()
         tile_pals = list(map(lambda x: x.palette, self.tiles.values()))
-        pals = self.optimize_palettes(tile_pals)
+        pals = self.optimize_palettes(tile_pals,N)
+
         sorted_pals = []
+
         for pal in pals:
+            n = 15 - len(pal) 
+            sorted_pals.append((0,0,0))
             sorted_pals.extend(sorted(pal, key=step, reverse=True))
+            sorted_pals.extend([(0,0,0)]*n)
         return sorted_pals
 
     def sort_palette_by_colors(self, palette, iters):
@@ -61,7 +66,7 @@ class Image:
     def get_sortedlist_tiles(self):
         return sorted(self.tiles.values(), key=lambda x: x.col_amount)
     
-    def optimize_palettes(self, tilepals, N=9, K=16):
+    def optimize_palettes(self, tilepals, N=9, K=15):
         """
         Return an optimized palette set for the given tile set.
         tilepals -- A list of sets of unique colors used for each tile of the image
@@ -82,20 +87,78 @@ class Image:
         # Sort tilepals from most to fewest colors
         sets.sort(key=len, reverse=True)
         # Combine tilepals as long as they fit within the color limit
-        opt = []
-        for s in sets:
-            for cs in opt:
-                if len(s | cs) <= K:
-                    cs.update(s)
-                    break
-            else:
-                opt.append(s)
+        opt = self.combine_tilepals(sets,K)
         # Sort tilepals from most to fewest colors
         opt.sort(key=len, reverse=True)
         # Check that the palettes fit within the palette limit
         if len(opt) > N:
             print("There are more than %d palettes" % N)
             return set()
+        return opt
+
+    def get_distances(self,train,test_row):
+        distances = list()
+        for train_row in train:
+            dist = len(self.compare_tilepals(test_row, train_row))* 1./len(train_row)
+            if len(set().union(train_row,test_row)) > 15:
+                dist = 0
+            distances.append((train_row, dist))
+        distances.sort(key=lambda tup: tup[1],reverse=True)
+        return distances
+    
+    # Locate the most similar neighbors
+    def get_neighbors(self,train, test_row):       
+        # neighbors = list()
+        distances = self.get_distances(train,test_row)
+        pal = test_row
+        i = 0
+        # print(distances)
+        while train:
+        # for i in range(num_neighbors):
+            if i < len(distances):
+                if len(set().union(pal,distances[i][0])) <= 15:
+                    pal.update(distances[i][0])
+            else:
+                break
+            i += 1
+        return pal
+    
+    def compare_tilepals(self,tilepal1,tilepal2):
+        return tilepal1.intersection(tilepal2)
+
+    def combine_tilepals(self,tilepals, n_colors):
+        # self.classify_tilepals(tilepals)
+        opt = []
+        print("Num_tilepals : ", len(tilepals))
+        # v = map(self.get_num_tiles_per_palette,tilepals)
+        # print(list(v))
+        # print(self.check_tiles_per_palette(tilepals[-1]))
+        ref_tilepals = tilepals.copy()
+
+        while ref_tilepals:
+            s = ref_tilepals.pop(0)
+
+            cs = self.get_neighbors(ref_tilepals,s)
+
+            subset = True
+
+            for pal in opt:
+                if cs.issubset(pal):
+                    subset = False
+                    break
+            if subset:
+                opt.append(cs)
+
+            sets = []
+            for s in ref_tilepals:
+                if s not in opt:
+                    sets.append(s)
+            # Remove tilepals that are proper subsets of other tilepals
+            sets = [s for s in sets if not any(c != s and s.issubset(c) for c in opt)]
+            ref_tilepals = sets
+                # print("despues :",len(ref_tilepals))
+        print(len(opt))
+        print(list(map(len,opt)))
         return opt
     
     def check_tiles_per_palette(self, palette, list_of_tiles=None):
