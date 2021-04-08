@@ -91,8 +91,7 @@ class EditorWidget(QWidget):
             if contains_bg_color[0]:
                 raw_palette = np.delete(raw_palette, contains_bg_color[0])
             pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
-            if contains_bg_color[0]:
-                pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
+            pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
 
             self.palette = cpal(np.array(pal_sorted_by_color))
             palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
@@ -119,8 +118,7 @@ class EditorWidget(QWidget):
             if contains_bg_color[0]:
                 raw_palette = np.delete(raw_palette, contains_bg_color[0])
             pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
-            if contains_bg_color[0]:
-                pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
+            pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
                 
             self.palette = cpal(np.array(pal_sorted_by_color))
             palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
@@ -147,8 +145,7 @@ class EditorWidget(QWidget):
             if contains_bg_color[0]:
                 raw_palette = np.delete(raw_palette, contains_bg_color[0])
             pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
-            if contains_bg_color[0]:
-                pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
+            pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
                 
             self.palette = cpal(np.array(pal_sorted_by_color))
             palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
@@ -289,8 +286,7 @@ class EditorWidget(QWidget):
         if contains_bg_color[0]:
             raw_palette = np.delete(raw_palette, contains_bg_color[0])
         pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
-        if contains_bg_color[0]:
-            pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
+        pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
 
         self.palette.palette = np.array(pal_sorted_by_color)
         self.palette.raw_palette_img = create_image_from_palette(np.array(pal_sorted_by_color))
@@ -313,15 +309,12 @@ class EditorWidget(QWidget):
             # Put in first place the background color
             index_exist_bg_color = np.array(list(map(lambda x: x== col, raw_palette)))
             exist_bg_color = np.where(index_exist_bg_color)
-            # TODO: Not working right, sometimes don't detect the colors
-            if exist_bg_color[0] == False:
-                pass  # TODO: Raise error
+            if exist_bg_color[0]:
+                raw_palette = np.delete(raw_palette, exist_bg_color[0])
             self.image.bg_color = col
             rgb_color = ImageColor.getcolor(qcol.name(), "RGB")
             pal_widget.show_color_label.setText(qcol.name())
 
-            if exist_bg_color[0]:
-                raw_palette = np.delete(raw_palette, exist_bg_color[0])
             pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
             pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
             

@@ -40,13 +40,8 @@ class SpriteEditorWidget(EditorWidget):
             im, pal = self.format_save_sprite()
             
             with open(file_name, 'wb') as f:
-                #png_writer = png.Writer(im.shape[1], im.shape[0], bitdepth=4)  # without palette
-                png_writer = png.Writer(im.shape[1], im.shape[0], bitdepth=4, palette=pal)  # with palette
+                png_writer = png.Writer(im.shape[1], im.shape[0], bitdepth=4, palette=pal)
                 png_writer.write(f, im)
-            # print(pal)
-            # print(self.image.rgb_image.getpalette())
-            # self.image.rgb_image = self.image.rgb_image.convert('P', colors=16)
-            # self.image.rgb_image.save(file_name)
         
 
     def change_color_depth(self, image, color_count):
