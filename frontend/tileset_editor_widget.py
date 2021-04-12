@@ -3,6 +3,9 @@ from PyQt5.QtWidgets import QLabel, QPushButton, QCheckBox, QSizePolicy
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtCore import Qt
 import png
+import numpy as np
+from backend.color_utilities import pil_to_pixmap, create_image_from_palette
+
 
 from frontend.editor_widget import EditorWidget
 
@@ -56,8 +59,16 @@ class TilesetEditorWidget(EditorWidget):
 
     def process_tileset(self,max_palettes):
         print("gonorrea hijueputa", max_palettes)
-        palettes = self.image.generate_palettes()
-        self.palette_widget.set_color_data(palettes)
+        palettes = self.image.generate_palettes(max_palettes)
+        self.set_viewer_image(pil_to_pixmap(self.image.rgb_image))
+        # self.set_pallette_viewer(palettes)
+
+        self.palette.palette = np.array(palettes)
+        # print(self.palette.palette)
+        self.palette.raw_palette_img = create_image_from_palette(self.palette.palette)
+        palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
+        self.palette_widget.palettes_label.setPixmap(palette_viewer)
+        self.palette_widget.palettes_label.resize(palette_viewer.size())
 
     def save_file(self):
         print("Tileset saving unavailable")

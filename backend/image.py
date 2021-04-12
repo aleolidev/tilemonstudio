@@ -43,9 +43,9 @@ class Image:
 
         for pal in pals:
             n = 15 - len(pal) 
-            sorted_pals.append((0,0,0))
+            sorted_pals.append(self.bg_color)
             sorted_pals.extend(sorted(pal, key=step, reverse=True))
-            sorted_pals.extend([(0,0,0)]*n)
+            sorted_pals.extend([self.bg_color]*n)
         return sorted_pals
 
     def sort_palette_by_colors(self, palette, iters):
@@ -73,24 +73,38 @@ class Image:
         N -- The maximum number of palettes for one image
         K -- The maximum number of colors for one tile palette
         """
-        # Check that each tilepal fits within the color limit
-        if any(len(s) > K for s in tilepals):
-            print("A tile has more than %d unique colors" % K)
-            return set()
-        # Remove duplicate tilepals
-        sets = []
-        for s in tilepals:
-            if s not in sets:
-                sets.append(s)
-        # Remove tilepals that are proper subsets of other tilepals
-        sets = [s for s in sets if not any(c != s and s.issubset(c) for c in sets)]
-        # Sort tilepals from most to fewest colors
-        sets.sort(key=len, reverse=True)
-        # Combine tilepals as long as they fit within the color limit
-        opt = self.combine_tilepals(sets,K)
-        # Sort tilepals from most to fewest colors
-        opt.sort(key=len, reverse=True)
-        # Check that the palettes fit within the palette limit
+        num_pals = len(tilepals) #TODO
+        num_colors = len(self.rgb_image.getcolors())
+        img = self.rgb_image#.copy()
+        while num_pals > N:
+            print(num_colors)
+            img_array = quantize(np.array(img),num_colors)
+            img = pim.fromarray(np.uint8(img_array)).convert('RGB')
+            self.rgb_image = img
+            self.slice_image()
+            tilepals = list(map(lambda x: x.palette, self.tiles.values()))
+            num_pals = len(tilepals)
+            # Check that each tilepal fits within the color limit
+            if any(len(s) > K for s in tilepals):
+                print("A tile has more than %d unique colors" % K)
+                return set()
+            # Remove duplicate tilepals
+            sets = []
+            for s in tilepals:
+                if s not in sets:
+                    sets.append(s)
+            # Remove tilepals that are proper subsets of other tilepals
+            sets = [s for s in sets if not any(c != s and s.issubset(c) for c in sets)]
+            # Sort tilepals from most to fewest colors
+            sets.sort(key=len, reverse=True)
+            # Combine tilepals as long as they fit within the color limit
+            opt = self.combine_tilepals(sets,K)
+            # Sort tilepals from most to fewest colors
+            opt.sort(key=len, reverse=True)
+            # Check that the palettes fit within the palette limit
+            num_pals = len(opt)
+            num_colors -= 5
+
         if len(opt) > N:
             print("There are more than %d palettes" % N)
             return set()
