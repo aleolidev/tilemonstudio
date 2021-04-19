@@ -18,7 +18,7 @@ class Image:
     TO_ROUND_VALUE = 8
     def __init__(self, raw_pixmap: QPixmap):
         self.raw_pixmap = raw_pixmap
-        self.bg_color = self.get_bg_color(np.array(pixmap_to_pil(raw_pixmap)))
+        self.bg_color = self.get_bg_color(pixmap_to_pil(raw_pixmap))
         self.rgb_image = self.rgba_to_rgb_and_background_color(pixmap_to_pil(raw_pixmap), self.bg_color)
         self.tiles = {}
         # self.slice_image()
@@ -218,7 +218,7 @@ class Image:
     
     # Reduct palettes by threshold
     def reduct_palettes(self, max_colors):
-        img = self.rgb_image.copy()
+        img = self.rgba_to_rgb_and_background_color(pixmap_to_pil(self.raw_pixmap), self.bg_color)
         bg_color_rgba = (
             self.bg_color[0],
             self.bg_color[1],
@@ -241,6 +241,12 @@ class Image:
             r_4bpp = round_to_multiple_of(col[0], self.TO_ROUND_VALUE)
             g_4bpp = round_to_multiple_of(col[1], self.TO_ROUND_VALUE)
             b_4bpp = round_to_multiple_of(col[2], self.TO_ROUND_VALUE)
+            if r_4bpp > 248:
+                r_4bpp = 248
+            if g_4bpp > 248:
+                g_4bpp = 248
+            if b_4bpp > 248:
+                b_4bpp = 248
             col_4bpp = (r_4bpp, g_4bpp, b_4bpp)
             if self.bg_color == col:
                 bg_color_set = True
@@ -252,6 +258,12 @@ class Image:
             r_4bpp = round_to_multiple_of(self.bg_color[0], self.TO_ROUND_VALUE)
             g_4bpp = round_to_multiple_of(self.bg_color[1], self.TO_ROUND_VALUE)
             b_4bpp = round_to_multiple_of(self.bg_color[2], self.TO_ROUND_VALUE)
+            if r_4bpp > 248:
+                r_4bpp = 248
+            if g_4bpp > 248:
+                g_4bpp = 248
+            if b_4bpp > 248:
+                b_4bpp = 248
             col_4bpp = (r_4bpp, g_4bpp, b_4bpp)
             self.bg_color = col_4bpp
         
@@ -269,32 +281,68 @@ class Image:
         mask = np.all(img[:, :, :3] != self.bg_color, axis=-1)
         return np.mean(img[mask], axis=0) / 255.0
     
+
+    """
+    In case it's loaded a RBGA image, it finds the most common
+    color between a range of luminosity and saturation, and finds
+    the "furthest" color of the found one based on the hue.
+    Then, generates new randoms values for saturation and luminosity
+    between a range to secure it looks pleasant until it is not
+    contained in the image.
+
+    If a RGB is loaded, will return the most common color.
+    """
     def get_bg_color(self, image):
-        img = image.copy()
+        img = np.array(image)
         if img.shape[2] == 4:
-            img = img.reshape(-1, 4)
-            # print(img[img[:, 3] == 255])
-            all_colors = img[img[:, 3] == 255]
-        elif img.shape[2] == 3:
-            img = img.reshape(-1, 3)
-            all_colors = img
-        avg_color = np.mean(all_colors, axis=0) / 255.0
-        avg_color = avg_color[:3]
-        hsv_color = np.array(colorsys.rgb_to_hsv(*avg_color))
-        hsv_color[0] = 1. - hsv_color[0]
-        hsv_color[1] = 60. / 255.
-        hsv_color[2] = 220. / 255.
-        bg_color = colorsys.hsv_to_rgb(*hsv_color)
-        bg_color = tuple((np.array(bg_color) * 255).astype(np.uint8))
-        while np.all(img[:, :3] != bg_color) == False:
-            hsv_color = np.array(colorsys.rgb_to_hsv(*bg_color))
-            rand_float = np.random.rand()
-            if rand_float < 0.2:  # TODO: wait, what???
-                rand_float += 0.2
-            hsv_color[1] = rand_float
-            bg_color = colorsys.hsv_to_rgb(*hsv_color)
-            bg_color = tuple((np.array(bg_color) * 255).astype(np.uint8))
-        return bg_color
+            img = pim.fromarray(img.astype(np.uint8))
+            pal = np.array(img.getcolors())
+            
+            """ 
+            Sort palette from less used colors to more used colors
+            and set format to RGB colors
+            """ 
+            pal_sorted_by_most_common = pal[pal[:,0].argsort()]
+            pal_sorted_by_most_common = np.array(pal_sorted_by_most_common[:,-1])
+            pal_sorted_by_most_common = np.array([np.array(row) for row in pal_sorted_by_most_common])
+            pal_sorted_by_most_common = pal_sorted_by_most_common[pal_sorted_by_most_common[:, 3] == 255]
+            pal_sorted_by_most_common = np.delete(pal_sorted_by_most_common, 3, 1)
+
+            most_common_index = len(pal_sorted_by_most_common) - 1
+            most_common_color = pal_sorted_by_most_common[most_common_index]
+            hsv_color = np.array(colorsys.rgb_to_hsv(*((np.array(most_common_color) / 255.0)[:3])))
+            while(most_common_index >= 0 and (hsv_color[2] < 40/255 or hsv_color[2] > 200/255 or hsv_color[1] < 40/255)):
+                most_common_index -= 1
+                most_common_color = pal_sorted_by_most_common[most_common_index]
+                hsv_color = np.array(colorsys.rgb_to_hsv(*((np.array(most_common_color) / 255.0)[:3])))
+            if (most_common_index >= 0):
+                hue = hsv_color[0] + 0.5
+                if hue >= 1:
+                    hue -= 1
+                # Always the same result
+                np.random.seed(0)
+                hsv_color[0] = hue
+                hsv_color[1] = 120/240 + (np.random.random() * (40/240))
+                hsv_color[2] = 180/240 + (np.random.random() * (40/240))
+                bg_color = colorsys.hsv_to_rgb(*hsv_color)
+                bg_color = tuple((np.array(bg_color) * 255).astype(np.uint8))
+                while np.all(pal_sorted_by_most_common[:, :3] != bg_color) == False:
+                    hsv_color[1] = 120/240 + (np.random.random() * (40/240))
+                    hsv_color[2] = 180/240 + (np.random.random() * (40/240))
+                    bg_color = colorsys.hsv_to_rgb(*hsv_color)
+                    bg_color = tuple((np.array(bg_color) * 255).astype(np.uint8))
+                return bg_color
+            else:
+                return tuple((np.array([64, 188, 188])).astype(np.uint8))
+        else:
+            img = pim.fromarray(img.astype(np.uint8))
+            pal = np.array(img.getcolors())
+            
+            # Sort palette from less used colors to more used colors 
+            pal_sorted_by_most_common = pal[pal[:,0].argsort()]
+            bg_color = pal_sorted_by_most_common[len(pal_sorted_by_most_common) - 1][1]
+            return bg_color
+
     
     def rgba_to_rgb_and_background_color(self, img, color):
         if len(img.getcolors()[0][1]) > 3:

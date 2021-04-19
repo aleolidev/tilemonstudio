@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QWidget, QTabBar, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QShortcut
+from PyQt5.QtGui import QKeySequence
 # from frontend.editor_widget import EditorWidget
-from frontend.sprite_editor_widget import SpriteEditorWidget
-from frontend.tileset_editor_widget import TilesetEditorWidget
-from frontend.background_editor_widget import BackgroundEditorWidget
+from frontend.image_editor_widget import ImageEditorWidget
 
 
 class CentralWidget(QWidget):
@@ -20,6 +20,9 @@ class CentralWidget(QWidget):
         self.tab_bar.setTabsClosable(True)
         self.lay.addWidget(self.tab_bar)
         self.setLayout(self.lay)
+
+        self.close_current_tab = QShortcut(QKeySequence('Ctrl+W'), self.tab_bar)
+        self.close_current_tab.activated.connect(lambda: self.close_tab(self.tab_bar.currentIndex()))
     
     def connect_signals(self):
         self.tab_bar.tabCloseRequested.connect(self.close_tab)
@@ -36,28 +39,15 @@ class CentralWidget(QWidget):
         # TODO: check if work is saved, show pop-up
         self.tab_bar.removeTab(index)
 
-    def add_sprite_editor_tab(self, save_option):
-        sprite_editor_tab = SpriteEditorWidget()
+    def add_image_editor_tab(self, save_option, drag_path = None):
+        if drag_path == None:
+            sprite_editor_tab = ImageEditorWidget()
+        else:
+            sprite_editor_tab = ImageEditorWidget(drag_path)
         if sprite_editor_tab.sprite != None:
             if not save_option.isEnabled():
                 save_option.setEnabled(True)
-            self.add_tab("[S] " + sprite_editor_tab.file_name, sprite_editor_tab)
-            self.c += 1
-
-    def add_tileset_editor_tab(self, save_option):
-        tileset_editor_tab = TilesetEditorWidget()
-        if tileset_editor_tab.tileset != None:
-            if not save_option.isEnabled():
-                save_option.setEnabled(True)
-            self.add_tab("[T] " + tileset_editor_tab.file_name, tileset_editor_tab)
-            self.c += 1
-    
-    def add_background_editor_tab(self, save_option):
-        background_editor_tab = BackgroundEditorWidget()
-        if background_editor_tab.background != None:
-            if not save_option.isEnabled():
-                save_option.setEnabled(True)
-            self.add_tab("[B] " + background_editor_tab.file_name, background_editor_tab)
+            self.add_tab(sprite_editor_tab.file_name, sprite_editor_tab)
             self.c += 1
 
 

@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, QTabBar, QTabWidget
+from PyQt5.QtCore import QMimeData, Qt
 
 from frontend.central_widget import CentralWidget
 
@@ -7,8 +8,10 @@ class MainWidget(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Tilemon Studio - Remake")
+        self.setWindowTitle("Simple Color Reductor")
+        self.setAcceptDrops(True)
         self.resize(600, 500)
+
         # self.setMinimumHeight(400)
         # self.setMinimumWidth(500)
         self.load_gui()
@@ -18,11 +21,7 @@ class MainWidget(QMainWindow):
         self.menu_bar = self.menuBar()
         # ACTIONS!
         # self.create_sprite_action = QAction("&Create Sprite", self)
-        self.load_sprite_action = QAction("&Load Sprite", self)
-        self.create_tileset_action = QAction("&Create Tileset", self)
-        self.load_tileset_action = QAction("&Load Tiileset", self)
-        self.create_background_action = QAction("&Create Background", self)
-        self.load_background_action = QAction("&Load Background", self)
+        self.load_image_action = QAction("&Load Image", self)
         self.save_work_action = QAction("&Save", self)
         self.exit_action = QAction("&Exit", self)
         
@@ -36,29 +35,18 @@ class MainWidget(QMainWindow):
         # MENUS!
         self.file_menu = self.menu_bar.addMenu("&File")
         self.file_menu.addActions([
-            # self.create_sprite_action,
-            self.load_sprite_action,
-            self.create_tileset_action,
-            self.create_background_action,
-            self.load_background_action,
+            self.load_image_action,
             self.file_menu.addSeparator(),
             self.save_work_action,
             self.file_menu.addSeparator(),
             self.exit_action
-        ])
-        self.options_menu = self.menu_bar.addMenu("&Options")
-        self.options_menu.addActions([
-            self.set_to_4bpp_action,
-            self.set_to_8bpp_action,
-            self.slice_sprite_act
         ])
         self.help_menu = self.menu_bar.addMenu("&Help")
         self.help_menu.addActions([
             self.about_action
         ])
         # SHORTCUTS!
-        self.load_sprite_action.setShortcut("Ctrl+I")
-        # self.load_sprite_action.setShortcut("Ctrl+Shift+I")
+        self.load_image_action.setShortcut("Ctrl+O")
         self.save_work_action.setShortcut("Ctrl+S")
         self.exit_action.setShortcut("Ctrl+Q")
         
@@ -77,8 +65,31 @@ class MainWidget(QMainWindow):
         self.central_widget = CentralWidget(self)
         self.setCentralWidget(self.central_widget)
     
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasImage:
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasImage:
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        if event.mimeData().hasImage:
+            event.setDropAction(Qt.CopyAction)
+            file_path = event.mimeData().urls()[0].toLocalFile()
+            if file_path.lower().endswith('.png'):
+                self.central_widget.add_image_editor_tab(self.save_work_action, file_path)
+            
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.ignore()
+
     def connect_signals(self):
-        self.load_sprite_action.triggered.connect(lambda: self.central_widget.add_sprite_editor_tab(self.save_work_action))
-        self.create_tileset_action.triggered.connect(lambda: self.central_widget.add_tileset_editor_tab(self.save_work_action))
-        self.create_background_action.triggered.connect(lambda: self.central_widget.add_background_editor_tab(self.save_work_action))
+        self.load_image_action.triggered.connect(lambda: self.central_widget.add_image_editor_tab(self.save_work_action))
         self.save_work_action.triggered.connect(lambda: self.central_widget.tab_bar.currentWidget().save_file())

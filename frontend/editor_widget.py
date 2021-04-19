@@ -20,16 +20,14 @@ class EditorWidget(QWidget):
         NO INSTANCIAR
         Para hacer un "Editor de X" tienes que heredar de esta clase e instanciar al hijo
     """
-    trigger_set_sprite_ui_images = pyqtSignal()
-    trigger_set_tileset_ui_images = pyqtSignal()
-    trigger_set_background_ui_images = pyqtSignal()
+    trigger_set_sprite_ui_images = pyqtSignal(str)
     trigger_set_palette_clickable = pyqtSignal()
     trigger_add_color_picker = pyqtSignal()
 
     MAX_SCALE_FACTOR = 16
     MIN_SCALE_FACTOR = .25
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__()
         self.actions_queue = []
         self.action_queue_index = None  # porque parte vacía
         
@@ -60,16 +58,18 @@ class EditorWidget(QWidget):
         # SIGNALS!
         self.connect_signals()
 
-    def load_image(self, type_of_image: str):
+    def load_image(self, type_of_image: str, drag_path = None):
         try:
-            name, _ = QFileDialog.getOpenFileName(QFileDialog(), "Select " + type_of_image, None, "Image Files (*.png)")
+            if drag_path == None or drag_path == "":
+                name, _ = QFileDialog.getOpenFileName(QFileDialog(), "Select " + type_of_image, None, "Image Files (*.png)")
 
-            if name != "":
-                self.file_name = QUrl.fromLocalFile(name).fileName()
+                if name != "":
+                    self.file_name = QUrl.fromLocalFile(name).fileName()
 
-                img = QPixmap(name)
-
-                return img
+                    return QPixmap(name)
+            else:
+                self.file_name = drag_path
+                return QPixmap(drag_path)
         except:
             pass
 
@@ -77,8 +77,9 @@ class EditorWidget(QWidget):
         self.image_label.setPixmap(img)
         self.image_label.resize(img.size())
 
-    def set_sprite_ui_images(self):
-        self.sprite = self.load_image("Sprite")
+    def set_sprite_ui_images(self, drag_path = None):
+        print("drag_path: ", drag_path)
+        self.sprite = self.load_image("Sprite", drag_path)
         
         if self.sprite != None:
             self.image = cim(self.sprite)
@@ -103,62 +104,6 @@ class EditorWidget(QWidget):
             
             self.set_viewer_image(pil_to_pixmap(self.image.rgb_image))
             self.palette_widget.set_color_data(pal_sorted_by_color[0])
-
-    def set_tileset_ui_images(self):
-        self.tileset = self.load_image("Tileset")
-        
-        if self.tileset != None:
-            self.image = cim(self.tileset)
-
-            raw_palette = np.array(self.image.rgb_image.getcolors(maxcolors=65536), dtype="object")[:,1]
-            
-            # Put in first place the background color
-            index_contains_bg_color = np.array(list(map(lambda x: x== self.image.bg_color, raw_palette)))
-            contains_bg_color = np.where(index_contains_bg_color)
-            if contains_bg_color[0]:
-                raw_palette = np.delete(raw_palette, contains_bg_color[0])
-            pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
-            pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
-                
-            self.palette = cpal(np.array(pal_sorted_by_color))
-            palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
-            self.palette_widget.palettes_label.setPixmap(palette_viewer)
-            self.palette_widget.palettes_label.resize(palette_viewer.size())
-            
-            if pixmap_to_pil(self.tileset).mode == "RGB":
-                self.trigger_add_color_picker.emit()
-
-            self.set_viewer_image(pil_to_pixmap(self.image.rgb_image))
-            self.palette_widget.set_color_data(pal_sorted_by_color[0])
-
-    def set_background_ui_images(self):
-        self.background = self.load_image("Background")
-        
-        if self.background != None:
-            self.image = cim(self.background)
-            
-            raw_palette = np.array(self.image.rgb_image.getcolors(maxcolors=65536), dtype="object")[:,1]
-            
-            # Put in first place the background color
-            index_contains_bg_color = np.array(list(map(lambda x: x== self.image.bg_color, raw_palette)))
-            contains_bg_color = np.where(index_contains_bg_color)
-            if contains_bg_color[0]:
-                raw_palette = np.delete(raw_palette, contains_bg_color[0])
-            pal_sorted_by_color = self.image.sort_palette_by_colors(list(raw_palette), 8)
-            pal_sorted_by_color = np.insert(pal_sorted_by_color, 0, self.image.bg_color, axis=0)
-                
-            self.palette = cpal(np.array(pal_sorted_by_color))
-            palette_viewer = pil_to_pixmap(self.palette.get_paletteviewer_image())
-            self.palette_widget.palettes_label.setPixmap(palette_viewer)
-            self.palette_widget.palettes_label.resize(palette_viewer.size())
-
-            if pixmap_to_pil(self.background).mode == "RGB":
-                self.trigger_add_color_picker.emit()
-
-            self.set_viewer_image(pil_to_pixmap(self.image.rgb_image))
-            self.palette_widget.set_color_data(pal_sorted_by_color[0])
-
-            
 
     def set_palette_clickable(self):
         self.palette_widget.palettes_label.mousePressEvent = lambda event: self.palette_widget.set_clicked_color(event, self.palette)
@@ -186,16 +131,15 @@ class EditorWidget(QWidget):
         # pal_widget.show_color_label.clicked.connect(lambda: self.pick_color_function)
 
     def index_sprite(self, max_colors):
-        if self.palette.palette.shape[0] > max_colors:
-            self.image.rgb_image = self.image.reduct_palettes(max_colors)
+        self.image.rgb_image = self.image.reduct_palettes(max_colors)
         self.image.rgb_image = self.image.palette_to_4bpp_format(self.image.rgb_image)
         self.update_scaled_img()
         self.update_palette_viewer()
         curr_picked_color = self.palette.palette[self.palette.color_picked]
         self.palette_widget.set_color_data(curr_picked_color)
         
-    def format_save_sprite(self):
-        im = self.image.rgb_image.quantize(16)
+    def format_save_sprite(self, max_colors_amount):
+        im = self.image.rgb_image.quantize(max_colors_amount)
         
         old_pal = im.getpalette()
         old_pal = [tuple(old_pal[x:x+3]) for x in range(0, len(old_pal), 3)]
@@ -211,7 +155,7 @@ class EditorWidget(QWidget):
         # Format image and palette
         pal = im.getpalette()
         pal = [tuple(pal[x:x+3]) for x in range(0, len(pal), 3)]
-        pal = pal[:16]
+        pal = pal[:max_colors_amount]
         im = np.array(im)
 
         # Get new palette distribution
@@ -229,6 +173,8 @@ class EditorWidget(QWidget):
             for j in range(np.array(im[i]).shape[0]):
                 im[i][j] = pal_redistribution[im[i][j]]
 
+        for elem in pal:
+            print(elem)
         return im, pal
         
             
@@ -337,8 +283,6 @@ class EditorWidget(QWidget):
 
     def connect_signals(self):
         self.trigger_set_sprite_ui_images.connect(self.set_sprite_ui_images)
-        self.trigger_set_tileset_ui_images.connect(self.set_tileset_ui_images)
-        self.trigger_set_background_ui_images.connect(self.set_background_ui_images)
         self.trigger_set_palette_clickable.connect(self.set_palette_clickable)
         self.trigger_add_color_picker.connect(self.add_color_picker)
 

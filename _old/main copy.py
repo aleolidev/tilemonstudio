@@ -15,10 +15,10 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-class TilemonStudioWindow(QMainWindow):
+class SimpleColorReductor(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
-        self.setWindowTitle("Tilemon Studio")
+        self.setWindowTitle("Simple Color Reductor")
         self.setFixedSize(348, 384)
 
         self.openImageAct = QAction('&Load Image', self)
@@ -997,6 +997,6 @@ def pixmap2pil(im):
 
 
 app = QApplication(sys.argv)
-screen = TilemonStudioWindow()
+screen = SimpleColorReductor()
 screen.show()
 sys.exit(app.exec_())

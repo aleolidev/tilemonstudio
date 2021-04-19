@@ -15,7 +15,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-class TilemonStudioWindow(QMainWindow):
+class SimpleColorReductor(QMainWindow):
     def __init__(self):
         self.load_init_window_toolbar()
         #self.load_tileset_window()
@@ -23,7 +23,7 @@ class TilemonStudioWindow(QMainWindow):
     def load_init_window_toolbar(self):
         QMainWindow.__init__(self)
         
-        self.set_window_basic_info("Tilemon Studio", (248, 200), True)
+        self.set_window_basic_info("Simple Color Reductor", (248, 200), True)
 
         # Creates a Sprite From a RAW Image
         self.createSpriteAct = QAction('&Create Sprite', self)
@@ -147,7 +147,7 @@ class TilemonStudioWindow(QMainWindow):
 
         """
         ### Set basic information
-        self.set_window_basic_info("Tilemon Studio - Sprites", (448, 400), False)  # deprecated
+        self.set_window_basic_info("Simple Color Reductor - Sprites", (448, 400), False)  # deprecated
 
         if True:
             ### Set Toolbar 
@@ -1135,6 +1135,6 @@ def pixmap2pil(im):
 
 
 app = QApplication(sys.argv)
-screen = TilemonStudioWindow()
+screen = SimpleColorReductor()
 screen.show()
 sys.exit(app.exec_())
